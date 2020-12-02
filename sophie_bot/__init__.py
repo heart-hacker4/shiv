@@ -44,7 +44,7 @@ if os.getenv('DEBUG_MODE', False):
 
 # Owner ID
 TOKEN = os.getenv("TOKEN")
-if not (OWNER_ID := os.getenv("OWNER_ID")):
+if not (OWNER_ID := int(os.getenv("OWNER_ID"))):
     log.critical('OWNER_ID not found!')
     exit(3)
 
