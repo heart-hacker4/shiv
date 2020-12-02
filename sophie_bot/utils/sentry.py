@@ -18,13 +18,17 @@
 
 import sentry_sdk
 from sentry_sdk.integrations.redis import RedisIntegration
-
-from sophie_bot.config import get_str_key
+import os
 from sophie_bot.utils.logger import log
 
-log.info("Starting sentry.io integraion...")
+SENTRY_API_KEY = os.getenv('SENTRY_API_KEY', None)
 
-sentry_sdk.init(
-    get_str_key('SENTRY_API_KEY'),
-    integrations=[RedisIntegration()]
-)
+if SENTRY_API_KEY:
+    log.info("Starting sentry.io integraion...")
+
+    sentry_sdk.init(
+        SENTRY_API_KEY,
+        integrations=[RedisIntegration()]
+    )
+else:
+    log.warn("sentry.io API key not found! Skipping.")

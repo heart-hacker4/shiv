@@ -17,20 +17,20 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+import os
 
 from telethon import TelegramClient
+from sophie_bot.utils.logger import log
 
-from sophie_bot.config import get_str_key, get_int_key
-
-TOKEN = get_str_key("TOKEN", required=True)
+TOKEN = os.getenv("TOKEN")
 NAME = TOKEN.split(':')[0]
 
-tbot = TelegramClient(
-    NAME,
-    get_int_key("APP_ID", required=True),
-    get_str_key("APP_HASH", required=True)
-)
+if not (APP_ID := os.getenv("APP_ID")):
+    log.critical('APP_ID not found!')
+if not (APP_HASH := os.getenv("APP_HASH")):
+    log.critical('APP_HASH not found!')
+
+tbot = TelegramClient(NAME, APP_ID, APP_HASH)
 
 # Telethon
 tbot.start(bot_token=TOKEN)

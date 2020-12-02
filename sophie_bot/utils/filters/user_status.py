@@ -19,8 +19,7 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
 
-from sophie_bot import OPERATORS, dp
-from sophie_bot.config import get_int_key
+from sophie_bot import OPERATORS, dp, OWNER_ID
 from sophie_bot.modules.utils.language import get_strings_dec
 from sophie_bot.modules.utils.user_details import is_user_admin
 from sophie_bot.services.mongo import mongodb
@@ -54,7 +53,7 @@ class IsOwner(BoundFilter):
         self.is_owner = is_owner
 
     async def check(self, message: types.Message):
-        if message.from_user.id == get_int_key("OWNER_ID"):
+        if message.from_user.id == OWNER_ID:
             return True
 
 

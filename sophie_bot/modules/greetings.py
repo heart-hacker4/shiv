@@ -20,6 +20,7 @@
 import io
 import random
 import re
+import os
 from contextlib import suppress
 from datetime import datetime
 from typing import Optional, Union
@@ -37,7 +38,6 @@ from captcha.image import ImageCaptcha
 from telethon.tl.custom import Button
 
 from sophie_bot import BOT_USERNAME, BOT_ID, bot, dp
-from sophie_bot.config import get_str_key
 from sophie_bot.decorator import register
 from sophie_bot.services.apscheduller import scheduler
 from sophie_bot.services.mongo import db
@@ -353,7 +353,7 @@ async def welcome_security(message, chat, strings):
         strings['ask_for_time_customization'].format(
             time=format_timedelta(
                 convert_time(
-                    get_str_key("JOIN_CONFIRM_DURATION")
+                    os.getenv("JOIN_CONFIRM_DURATION", "2h")
                 ),
                 locale=strings['language_info']['babel']
             )
