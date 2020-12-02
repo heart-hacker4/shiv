@@ -21,8 +21,8 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
 
-from sophie_bot.utils.logger import log
 from sophie_bot.services.redis import HOST, PORT, DB
+from sophie_bot.utils.logger import log
 
 DEFAULT = "default"
 

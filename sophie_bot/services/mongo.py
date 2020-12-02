@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import sys
 import os
+import sys
 
 from motor import motor_asyncio
 from pymongo import MongoClient

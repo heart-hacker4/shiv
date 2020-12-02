@@ -20,6 +20,7 @@
 import os
 
 from telethon import TelegramClient
+
 from sophie_bot.utils.logger import log
 
 TOKEN = os.getenv("TOKEN")

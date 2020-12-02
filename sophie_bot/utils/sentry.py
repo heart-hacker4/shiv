@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 import sentry_sdk
 from sentry_sdk.integrations.redis import RedisIntegration
-import os
+
 from sophie_bot.utils.logger import log
 
 SENTRY_API_KEY = os.getenv('SENTRY_API_KEY', None)
