@@ -19,7 +19,6 @@
 import html
 import re
 import sys
-import textwrap
 from datetime import datetime
 
 from aiogram.types import Message
@@ -222,16 +221,14 @@ async def get_msg_file(message):
 
 async def get_parsed_note_list(message, allow_reply_message=True, split_args=1):
     note = {}
-
-    to_split = ''.join([" " + q for q in get_args(message)[:split_args]])
-    if not to_split:
-        to_split = ' '
-
     if "reply_to_message" in message and allow_reply_message:
         # Get parsed reply msg text
         text, note['parse_mode'] = get_parsed_msg(message.reply_to_message)
         # Get parsed origin msg text
         text += ' '
+        to_split = ''.join([" " + q for q in get_args(message)[:split_args]])
+        if not to_split:
+            to_split = ' '
         text += get_parsed_msg(message)[0].partition(message.get_command() + to_split)[2][1:]
         # Set parse_mode if origin msg override it
         if mode := get_msg_parse(message.text, default_md=False):
@@ -247,7 +244,10 @@ async def get_parsed_note_list(message, allow_reply_message=True, split_args=1):
     else:
         text, note['parse_mode'] = get_parsed_msg(message)
         if message.get_command() and message.get_args():
-            text = text.partition(message.get_command() + to_split)[2][1:]
+            # Remove cmd and arg from message's text
+            text = re.sub(message.get_command() + r"\s?", '', text, 1)
+            if split_args > 0:
+                text = re.sub(re.escape(get_args(message)[0]) + r"\s?", '', text, 1)
         # Check on attachment
         if msg_file := await get_msg_file(message):
             note['file'] = msg_file
@@ -313,7 +313,8 @@ async def t_unparse_note_item(message, db_item, chat_id, noformat=None, event=No
 
 
 async def send_note(send_id, text, **kwargs):
-    text = textwrap.shorten(text, width=1000)
+    if text:
+        text = text[:4090]
 
     if 'parse_mode' in kwargs and kwargs['parse_mode'] == 'md':
         kwargs['parse_mode'] = tmarkdown
@@ -334,14 +335,21 @@ async def send_note(send_id, text, **kwargs):
 
 def button_parser(chat_id, texts, pm=False, aio=False, row_width=None):
     buttons = InlineKeyboardMarkup(row_width=row_width) if aio else []
-    pattern = r'\[(.+?)\]\((button|btn|.)(.+?)(:.+?|)(:same|)\)(\n|)'
+    pattern = r'\[(.+?)\]\((button|btn|#)(.+?)(:.+?|)(:same|)\)(\n|)'
     raw_buttons = re.findall(pattern, texts)
     text = re.sub(pattern, '', texts)
     btn = None
     for raw_button in raw_buttons:
         name = raw_button[0]
         action = raw_button[1] if raw_button[1] not in ('button', 'btn') else raw_button[2]
-        argument = raw_button[3][1:].lower().replace('`', '') if raw_button[3] else ''
+
+        if raw_button[3]:
+            argument = raw_button[3][1:].lower().replace('`', '')
+        elif action in ('#'):
+            argument = raw_button[2]
+            print(raw_button[2])
+        else:
+            argument = ''
 
         if action in BUTTONS.keys():
             cb = BUTTONS[action]
@@ -413,7 +421,7 @@ async def vars_parser(text, message, chat_id, md=False, event: Message = None, u
                if 'new_chat_members' in event and event.new_chat_members != [] else user.id)
     mention = await get_user_link(user_id, md=md)
 
-    if event.new_chat_members and event.new_chat_members[0].username:
+    if hasattr(event, 'new_chat_members') and event.new_chat_members and event.new_chat_members[0].username:
         username = "@" + event.new_chat_members[0].username
     elif user.username:
         username = "@" + user.username
