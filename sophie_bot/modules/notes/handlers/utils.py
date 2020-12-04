@@ -25,9 +25,9 @@ from aiogram.utils.exceptions import MessageNotModified
 from pymongo import ReplaceOne
 
 from sophie_bot.services.mongo import db
+from ..utils.get import get_note
 from ...utils.language import get_string
 from ...utils.notes import ALLOWED_COLUMNS
-from ..utils.get import get_note
 
 
 async def __stats__():
