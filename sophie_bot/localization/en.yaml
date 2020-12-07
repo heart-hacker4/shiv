@@ -742,6 +742,7 @@ STRINGS:
     setup_success: Successfully configured antiflood, now enforces against those who sends {count} messages within {time}!
     setup_success:no_exp: Successfully configured antiflood, allows {count} messages consecutively!
     invalid_time: Invalid time!
+    setup_corrupted: Setup is corrupted, try again!
 
     # /antiflood | /flood
     not_configured: Antiflood isn't configured in this chat yet!
@@ -753,5 +754,6 @@ STRINGS:
     kick: kicked
 
     # /setfloodaction
+    send_time: Please send time!
     invalid_args: "Unsupported action, expected {supported_actions}!"
     setfloodaction_success: "Successfully updated flood action to <b>{action}</b>!"
