@@ -16,13 +16,13 @@ cryptg
 cryptography
 
 # Other
+python-dotenv
 envparse
 hypercorn
 aiocron
 apscheduler
 requests
 ujson
-PyYAML>5.0
 coloredlogs
 loguru
 sentry_sdk

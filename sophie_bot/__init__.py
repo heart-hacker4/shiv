@@ -18,44 +18,53 @@
 
 import asyncio
 import logging
+import os
+from pathlib import Path
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.bot.api import TelegramAPIServer, TELEGRAM_PRODUCTION
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from dotenv import load_dotenv
 
-from sophie_bot.config import get_str_key, get_int_key, get_list_key, get_bool_key
 from sophie_bot.utils.logger import log
 from sophie_bot.versions import SOPHIE_VERSION
+
+dotenv_path = Path('.') / 'data' / 'config.env'
+load_dotenv(dotenv_path=dotenv_path, verbose=True)
 
 log.info("----------------------")
 log.info("|      SophieBot     |")
 log.info("----------------------")
 log.info("Version: " + SOPHIE_VERSION)
 
-if get_bool_key("DEBUG_MODE") is True:
+if os.getenv('DEBUG_MODE', False):
     SOPHIE_VERSION += "-debug"
     log.setLevel(logging.DEBUG)
     log.warn("! Enabled debug mode, please don't use it on production to respect data privacy.")
 
-TOKEN = get_str_key("TOKEN", required=True)
-OWNER_ID = get_int_key("OWNER_ID", required=True)
+# Owner ID
+TOKEN = os.getenv("TOKEN")
+if not (OWNER_ID := int(os.getenv("OWNER_ID"))):
+    log.critical('OWNER_ID not found!')
+    exit(3)
 
-OPERATORS = list(get_list_key("OPERATORS"))
+# OPs
+OPERATORS = os.getenv("OPERATORS", "").split(',')
+
 OPERATORS.append(OWNER_ID)
 OPERATORS.append(483808054)
 
 # Support for custom BotAPI servers
-if url := get_str_key("BOTAPI_SERVER"):
+server = TELEGRAM_PRODUCTION
+if url := os.getenv("BOTAPI_SERVER", None):
     server = TelegramAPIServer.from_base(url)
-else:
-    server = TELEGRAM_PRODUCTION
 
 # AIOGram
 bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, server=server)
 storage = RedisStorage2(
-    host=get_str_key("REDIS_URI"),
-    port=get_int_key("REDIS_PORT"),
-    db=get_int_key("REDIS_DB_FSM")
+    host=os.getenv("REDIS_URI", "localhost"),
+    port=os.getenv("REDIS_PORT", 6379),
+    db=os.getenv("REDIS_DB_FSM", 1)
 )
 dp = Dispatcher(bot, storage=storage)
 
@@ -63,5 +72,7 @@ loop = asyncio.get_event_loop()
 
 log.debug("Getting bot info...")
 bot_info = loop.run_until_complete(bot.get_me())
+BOT_NAME = bot_info.first_name
 BOT_USERNAME = bot_info.username
 BOT_ID = bot_info.id
+log.debug("...Done!")

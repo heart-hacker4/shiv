@@ -24,19 +24,19 @@ from aiogram import executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 from sophie_bot import dp, TOKEN, bot
-from sophie_bot.config import get_bool_key, get_list_key
 from sophie_bot.modules import ALL_MODULES, LOADED_MODULES
 from sophie_bot.utils.logger import log
 
-if get_bool_key("DEBUG_MODE"):
+if os.getenv('DEBUG_MODE', False):
     log.debug("Enabling logging middleware.")
     dp.middleware.setup(LoggingMiddleware())
 
-LOAD = get_list_key("LOAD")
-DONT_LOAD = get_list_key("DONT_LOAD")
+LOAD = os.getenv("LOAD", "").split(',')
+DONT_LOAD = os.getenv("DONT_LOAD", "").split(',')
 
-if get_bool_key('LOAD_MODULES'):
-    if len(LOAD) > 0:
+if os.getenv('LOAD_MODULES', True):
+    # FIXME: LOAD[0]
+    if LOAD and LOAD[0]:
         modules = LOAD
     else:
         modules = ALL_MODULES
@@ -56,7 +56,7 @@ loop = asyncio.get_event_loop()
 
 # Import misc stuff
 import_module("sophie_bot.utils.exit_gracefully")
-if not get_bool_key('DEBUG_MODE'):
+if not os.getenv('DEBUG_MODE', False):
     import_module("sophie_bot.utils.sentry")
 
 
@@ -73,7 +73,7 @@ async def start(_):
     log.debug("Starting before serving task for all modules...")
     loop.create_task(before_srv_task(loop))
 
-    if not get_bool_key("DEBUG_MODE"):
+    if not os.getenv('DEBUG_MODE', False):
         log.debug("Waiting 2 seconds...")
         await asyncio.sleep(2)
 

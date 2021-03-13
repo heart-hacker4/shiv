@@ -16,26 +16,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import sys
 
 import redis as redis_lib
 
 from sophie_bot import log
-from sophie_bot.config import get_str_key, get_int_key
+
+HOST = os.getenv("REDIS_URI", "localhost")
+PORT = os.getenv("REDIS_PORT", 6379)
+DB = os.getenv("REDIS_DB_FSM", 1)
 
 # Init Redis
-redis = redis_lib.StrictRedis(
-    host=get_str_key("REDIS_URI"),
-    port=get_str_key("REDIS_PORT"),
-    db=get_int_key("REDIS_DB_FSM"),
-    decode_responses=True
-)
-
-bredis = redis_lib.StrictRedis(
-    host=get_str_key("REDIS_URI"),
-    port=get_str_key("REDIS_PORT"),
-    db=get_int_key("REDIS_DB_FSM")
-)
+redis = redis_lib.StrictRedis(host=HOST, port=PORT, db=DB, decode_responses=True)
+bredis = redis_lib.StrictRedis(host=HOST, port=PORT, db=DB)
 
 try:
     redis.ping()

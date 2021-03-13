@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import os
 import sys
 
 from motor import motor_asyncio
@@ -24,11 +25,10 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from sophie_bot import log
-from sophie_bot.config import get_str_key, get_int_key
 
-MONGO_URI = get_str_key("MONGO_URI")
-MONGO_PORT = get_int_key("MONGO_PORT")
-MONGO_DB = get_str_key("MONGO_DB")
+MONGO_URI = os.getenv("MONGO_URI", "localhost")
+MONGO_PORT = os.getenv("MONGO_PORT", 27017)
+MONGO_DB = os.getenv("MONGO_DB", "sophie")
 
 # Init MongoDB
 mongodb = MongoClient(MONGO_URI, MONGO_PORT)[MONGO_DB]

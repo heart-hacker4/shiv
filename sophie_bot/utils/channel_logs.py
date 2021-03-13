@@ -18,8 +18,9 @@
 
 import html
 
-from sophie_bot import bot
 from sophie_bot.config import get_int_key
+
+from sophie_bot import bot
 from sophie_bot.utils.logger import log
 
 
