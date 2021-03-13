@@ -27,7 +27,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from sophie_bot import log
 
 MONGO_URI = os.getenv("MONGO_URI", "localhost")
-MONGO_PORT = os.getenv("MONGO_PORT", 27017)
+MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
 MONGO_DB = os.getenv("MONGO_DB", "sophie")
 
 # Init MongoDB

@@ -24,8 +24,8 @@ import redis as redis_lib
 from sophie_bot import log
 
 HOST = os.getenv("REDIS_URI", "localhost")
-PORT = os.getenv("REDIS_PORT", 6379)
-DB = os.getenv("REDIS_DB_FSM", 1)
+PORT = int(os.getenv("REDIS_PORT", 6379))
+DB = int(os.getenv("REDIS_DB_FSM", 1))
 
 # Init Redis
 redis = redis_lib.StrictRedis(host=HOST, port=PORT, db=DB, decode_responses=True)

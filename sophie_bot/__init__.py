@@ -63,8 +63,8 @@ if url := os.getenv("BOTAPI_SERVER", None):
 bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, server=server)
 storage = RedisStorage2(
     host=os.getenv("REDIS_URI", "localhost"),
-    port=os.getenv("REDIS_PORT", 6379),
-    db=os.getenv("REDIS_DB_FSM", 1)
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    db=int(os.getenv("REDIS_DB_FSM", 1))
 )
 dp = Dispatcher(bot, storage=storage)
 
