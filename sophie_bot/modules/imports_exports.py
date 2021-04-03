@@ -17,24 +17,35 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import orjson
 import asyncio
 import io
 from datetime import datetime, timedelta
+from odmantic.engine import ModelType
 
 import ujson
 from aiogram import types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types.input_file import InputFile
 from babel.dates import format_timedelta
+from odmantic.engine import ModelType
+from pydantic.error_wrappers import ValidationError
 
-from sophie_bot import OPERATORS, bot
+
+from sophie_bot import OPERATORS, bot, SOPHIE_VERSION, BOT_ID
 from sophie_bot.decorator import register
+from sophie_bot.models.imports_exports import ExportModel, GeneralData, ExportInfo
+from sophie_bot.modules.utils.message import get_arg
+from sophie_bot.modules.utils.text import SanTeXDoc, Section, Code, KeyValue, VList
 from sophie_bot.services.redis import redis
 from . import LOADED_MODULES
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
+from sophie_bot.models.imports_exports import ExportModel, GeneralData, ExportInfo
+from sophie_bot.modules.utils.text import SanTeXDoc, Section, Bold, Code, KeyValue, VList
+from sophie_bot.modules.utils.message import get_arg
 
-VERSION = 5
+VERSION = 6
 
 
 # Waiting for import file state
@@ -57,21 +68,30 @@ async def export_chat_data(message, chat, strings):
     redis.expire(key, 7200)
 
     msg = await message.reply(strings['started_exporting'])
-    data = {
-        'general': {
-            'chat_name': chat['chat_title'],
-            'chat_id': chat_id,
-            'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'version': VERSION
-        }
-    }
+    modules = {}
 
-    for module in [m for m in LOADED_MODULES if hasattr(m, '__export__')]:
-        await asyncio.sleep(0)  # Switch to other events before continue
-        if k := await module.__export__(chat_id):
-            data.update(k)
+    for module in [m for m in LOADED_MODULES if hasattr(m, '__export_data__')]:
+        await asyncio.sleep(0.2)
 
-    jfile = InputFile(io.StringIO(ujson.dumps(data, indent=2)), filename=f'{chat_id}_export.json')
+        module_name = module.__name__.replace('sophie_bot.modules.', '')
+        module_data = await module.__export_data__(chat_id)
+        if module_data:
+            modules[module_name] = module_data.dict(exclude={'id'})
+
+    data = ExportModel(
+        export_info=ExportInfo(
+            chat_name=chat['chat_title'],
+            chat_id=chat_id,
+            date=datetime.now(),
+        ),
+        general=GeneralData(
+            sophie_version=SOPHIE_VERSION,
+            sophie_id=BOT_ID,
+            version=VERSION
+        ), modules=modules
+    )
+
+    jfile = InputFile(io.StringIO(data.json(indent=2)), filename=f'{chat_id}_export.json')
     text = strings['export_done'].format(chat_name=chat['chat_title'])
     await message.answer_document(jfile, text, reply=message.message_id)
     await msg.delete()
@@ -115,6 +135,11 @@ async def import_fun(message, document, chat, strings):
     redis.set(key, 1)
     redis.expire(key, 7200)
 
+    arg = get_arg(message)
+    overwrite = False
+    if arg in ('overwrite', 'replace'):
+        overwrite = True
+
     msg = await message.reply(strings['started_importing'])
     if document['file_size'] > 52428800:
         await message.reply(strings['big_file'])
@@ -135,16 +160,33 @@ async def import_fun(message, document, chat, strings):
         await message.reply(strings['file_version_so_new'])
         return
 
+    data_modules = data.get('modules', [])
+
     imported = []
-    for module in [m for m in LOADED_MODULES if hasattr(m, '__import__')]:
+    for module in [m for m in LOADED_MODULES if hasattr(m, '__import_data__')]:
         module_name = module.__name__.replace('sophie_bot.modules.', '')
-        if module_name not in data:
-            continue
-        if not data[module_name]:
+        if module_name not in data_modules:
             continue
 
         imported.append(module_name)
-        await asyncio.sleep(0)  # Switch to other events before continue
-        await module.__import__(chat_id, data[module_name])
+        await asyncio.sleep(0.2)
 
-    await msg.edit_text(strings['import_done'])
+        try:
+            module_data: ModelType = module.__data_model__(**data_modules[module_name])
+            await module.__import_data__(chat_id, module_data, overwrite=overwrite)
+        except ValidationError as validation_errors:
+            error_list = []
+            for error in validation_errors.errors():
+                error_location = ('modules', module_name) + error['loc']
+                error_list.append(KeyValue(' -> '.join(str(e) for e in error_location), Code(error['msg'])))
+
+            return await message.reply(str(SanTeXDoc(Section(
+                KeyValue(strings['module_name'], module_name),
+                Section(VList(*error_list), title=strings['error_msg']),
+                title=strings['import_error_header']
+            ))))
+
+    text = strings['import_done'].format(chat_name=chat['chat_title'])
+    text += '\n'
+    text += strings['import_replace'] if overwrite else strings['import_append']
+    await msg.edit_text(text)
