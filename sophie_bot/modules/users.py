@@ -41,11 +41,7 @@ async def update_users_handler(message):
     if not new_chat.type == 'private':
 
         old_chat = await db.chat_list.find_one({'chat_id': chat_id})
-
-        if not hasattr(new_chat, 'username'):
-            chatnick = None
-        else:
-            chatnick = new_chat.username
+        chatnick = new_chat.username if hasattr(new_chat, 'username') else None
 
         if old_chat and 'first_detected_date' in old_chat:
             first_detected_date = old_chat['first_detected_date']

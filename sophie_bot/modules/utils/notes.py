@@ -1,165 +1,74 @@
-# Copyright (C) 2018 - 2020 MrYacha. All rights reserved. Source code available under the AGPL.
-# Copyright (C) 2019 Aiogram
-#
-# This file is part of SophieBot.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import html
 import re
-import sys
-from datetime import datetime
+from random import choice
+from typing import Optional, List, Dict, Tuple
 
 from aiogram.types import Message
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils import markdown
-from babel.dates import format_date, format_time, format_datetime
+from aiogram.utils.text_decorations import HtmlDecoration
 from telethon.errors import (
-    ButtonUrlInvalidError, MessageEmptyError, MediaEmptyError,
-    BadRequestError
+    ButtonUrlInvalidError, MessageEmptyError, MediaEmptyError
 )
 from telethon.tl.custom import Button
 
-import sophie_bot.modules.utils.tmarkdown as tmarkdown
-from sophie_bot import BOT_USERNAME
+from sophie_bot import BOT_USERNAME, bot
+from sophie_bot.models.notes import BaseNote, ParseMode
 from sophie_bot.services.telethon import tbot
-from .language import get_chat_lang
+from sophie_bot.types.chat import ChatId
+from sophie_bot.utils.logger import log
 from .message import get_args
-from .tmarkdown import tbold, titalic, tpre, tcode, tlink, tstrikethrough, tunderline
+from .smarkdown import SDecoration
 from .user_details import get_user_link
-from ...utils.logger import log
 
-BUTTONS = {}
-
-ALLOWED_COLUMNS = [
-    'parse_mode',
-    'file',
-    'text',
-    'preview'
-]
+BUTTONS: Dict[str, str] = {}
+RANDOM_REGEXP = re.compile(r'{([^{}]+)}')
+DESC_REGEXP = re.compile(r'DESC=\"(.+[^\"])\"')
+BUTTONS_REGEXP = re.compile(r'\[(.+?)]\((button|btn|#)(.+?)(:.+?|)(:same|)\)(\n|)')
+PARSE_MODE_PATTERN = re.compile(r'(\[|%)?(format|parse(mode)?)(:|_)(\w+)(])?')
+START_URL = f'https://t.me/{BOT_USERNAME}?start='
+DEFAULT_PARSE_MODE = ParseMode.md
 
 
-def tparse_ent(ent, text, as_html=True):
-    if not text:
-        return text
+def get_message_raw_text(message: Message) -> str:
+    return message.caption or message.text or ''
 
-    etype = ent.type
-    offset = ent.offset
-    length = ent.length
 
-    if sys.maxunicode == 0xffff:
-        return text[offset:offset + length]
+def get_parsed_msg(message: Message, parse_mode: ParseMode) -> str:
+    if not (raw_text := get_message_raw_text(message)):
+        return ''
 
-    if not isinstance(text, bytes):
-        entity_text = text.encode('utf-16-le')
+    if not (entities := message.caption_entities or message.entities):
+        return raw_text
+
+    if parse_mode.html:
+        result = HtmlDecoration().unparse(raw_text, entities)
     else:
-        entity_text = text
+        result = SDecoration().unparse(raw_text, entities)
 
-    entity_text = entity_text[offset * 2:(offset + length) * 2].decode('utf-16-le')
-
-    if etype == 'bold':
-        method = markdown.hbold if as_html else tbold
-        return method(entity_text)
-    if etype == 'italic':
-        method = markdown.hitalic if as_html else titalic
-        return method(entity_text)
-    if etype == 'pre':
-        method = markdown.hpre if as_html else tpre
-        return method(entity_text)
-    if etype == 'code':
-        method = markdown.hcode if as_html else tcode
-        return method(entity_text)
-    if etype == 'strikethrough':
-        method = markdown.hstrikethrough if as_html else tstrikethrough
-        return method(entity_text)
-    if etype == 'underline':
-        method = markdown.hunderline if as_html else tunderline
-        return method(entity_text)
-    if etype == 'url':
-        return entity_text
-    if etype == 'text_link':
-        method = markdown.hlink if as_html else tlink
-        return method(entity_text, ent.url)
-    if etype == 'text_mention' and ent.user:
-        return ent.user.get_mention(entity_text, as_html=as_html)
-
-    return entity_text
+    # Remove note vars
+    return remove_msg_parse(result)
 
 
-def get_parsed_msg(message):
-    if not message.text and not message.caption:
-        return '', 'md'
+def get_msg_parse(text: str, default: Optional[ParseMode] = DEFAULT_PARSE_MODE) -> Optional[ParseMode]:
+    if not (data := PARSE_MODE_PATTERN.match(text)):
+        return default
 
-    text = message.caption or message.text
+    arg = data.group(5).lower()
+    if arg in {'markdown', 'md'}:
+        return ParseMode.md
+    elif arg in {'html'}:
+        return ParseMode.html
+    elif arg in {'no', 'none'}:
+        return ParseMode.none
 
-    mode = get_msg_parse(text)
-    if mode == 'html':
-        as_html = True
-    else:
-        as_html = False
-
-    entities = message.caption_entities or message.entities
-
-    if not entities:
-        return text, mode
-
-    if not sys.maxunicode == 0xffff:
-        text = text.encode('utf-16-le')
-
-    result = ''
-    offset = 0
-
-    for entity in sorted(entities, key=lambda item: item.offset):
-        entity_text = tparse_ent(entity, text, as_html=as_html)
-
-        if sys.maxunicode == 0xffff:
-            part = text[offset:entity.offset]
-            result += part + entity_text
-        else:
-            part = text[offset * 2:entity.offset * 2].decode('utf-16-le')
-            result += part + entity_text
-
-        offset = entity.offset + entity.length
-
-    if sys.maxunicode == 0xffff:
-        result += text[offset:]
-    else:
-        result += text[offset * 2:].decode('utf-16-le')
-
-    result = re.sub(r'\[format:(\w+)\]', '', result)
-    result = re.sub(r'%PARSEMODE_(\w+)', '', result)
-
-    if not result:
-        result = ''
-
-    return result, mode
+    raise ValueError
 
 
-def get_msg_parse(text, default_md=True):
-    if '[format:html]' in text or '%PARSEMODE_HTML' in text:
-        return 'html'
-    elif '[format:none]' in text or '%PARSEMODE_NONE' in text:
-        return 'none'
-    elif '[format:md]' in text or '%PARSEMODE_MD' in text:
-        return 'md'
-    else:
-        if not default_md:
-            return None
-        return 'md'
+def remove_msg_parse(text: str) -> str:
+    """Removes parse_mode var from text"""
+    return PARSE_MODE_PATTERN.sub('', text)
 
 
-def parse_button(data, name):
+def parse_button(data, name: str) -> str:
     raw_button = data.split('_')
     raw_btn_type = raw_button[0]
 
@@ -181,7 +90,7 @@ def parse_button(data, name):
     return text
 
 
-def get_reply_msg_btns_text(message):
+def get_reply_msg_buttons_text(message: Message) -> str:
     text = ''
     for column in message.reply_markup.inline_keyboard:
         btn_num = 0
@@ -206,7 +115,8 @@ def get_reply_msg_btns_text(message):
     return text
 
 
-async def get_msg_file(message):
+async def get_msg_file(message: Message) -> Optional[dict]:
+    # TODO: Remove file type or something
     message_id = message.message_id
 
     tmsg = await tbot.get_messages(message.chat.id, ids=message_id)
@@ -219,124 +129,138 @@ async def get_msg_file(message):
     return None
 
 
-async def get_parsed_note_list(message, allow_reply_message=True, split_args=1):
-    note = {}
+async def get_parsed_note_list(message: Message, allow_reply_message=True, split_args=1) -> BaseNote:
+    # Default params
+    preview = False
+    file = None
 
-    to_split = ''.join([" " + q for q in get_args(message)[:split_args]])
-    if not to_split:
+    # IDK what this do OwO
+    if not (to_split := ''.join([" " + q for q in get_args(message)[:split_args]])):
         to_split = ' '
 
     if "reply_to_message" in message and allow_reply_message:
         # Get parsed reply msg text
-        text, note['parse_mode'] = get_parsed_msg(message.reply_to_message)
+        parse_mode = get_msg_parse(message.reply_to_message.text)
+        text = get_parsed_msg(message.reply_to_message, parse_mode)
+
         # Get parsed origin msg text
-        text += ' '
-        text += get_parsed_msg(message)[0].partition(message.get_command() + to_split)[2][1:]
-        # Set parse_mode if origin msg override it
-        if mode := get_msg_parse(message.text, default_md=False):
-            note['parse_mode'] = mode
+        if origin_raw_text := get_message_raw_text(message).partition(message.get_command() + to_split)[2][1:]:
+            text += '\n'  # A delimeter between replied and origin messages
+            text += get_parsed_msg(message, parse_mode)
+            # Set parse_mode if origin msg override it
+            if mode := get_msg_parse(origin_raw_text, default=None):
+                parse_mode = mode
 
         # Get message keyboard
         if 'reply_markup' in message.reply_to_message and 'inline_keyboard' in message.reply_to_message.reply_markup:
-            text += get_reply_msg_btns_text(message.reply_to_message)
+            text += get_reply_msg_buttons_text(message.reply_to_message)
 
         # Check on attachment
         if msg_file := await get_msg_file(message.reply_to_message):
-            note['file'] = msg_file
+            file = msg_file
     else:
-        text, note['parse_mode'] = get_parsed_msg(message)
+        parse_mode = get_msg_parse(get_message_raw_text(message))
+        text = get_parsed_msg(message, parse_mode)
         if message.get_command() and message.get_args():
             text = text.partition(message.get_command() + to_split)[2][1:]
         # Check on attachment
         if msg_file := await get_msg_file(message):
-            note['file'] = msg_file
-
-    if text.replace(' ', ''):
-        note['text'] = text
+            file = msg_file
 
     # Preview
-    if 'text' in note and re.search(r'[$|%]PREVIEW', note["text"]):
-        note["text"] = re.sub(r'[$|%]PREVIEW', '', note['text'])
-        note['preview'] = True
+    if '%PREVIEW' in text:
+        text = text.replace('%PREVIEW', '')
+        preview = True
 
-    return note
+    return BaseNote(
+        parse_mode=parse_mode,
+        file=file,
+        text=text,
+        preview=preview
+    )
 
 
-async def t_unparse_note_item(message, db_item, chat_id, noformat=None, event=None, user=None):
-    text = db_item['text'] if 'text' in db_item else ""
-
+async def unparse_note_item(message: Message, note: BaseNote, chat_id: ChatId, 
+                            raw=None, event=None, user=None) -> Tuple[str, dict]:
+    """Unparses BaseNote and prepares args for send_message method"""
+    text = note.text or ''
     file_id = None
-    preview = None
+    markup = None
 
-    if not user:
-        user = message.from_user
+    if note.file:
+        file_id = note.file.id
 
-    if 'file' in db_item:
-        file_id = db_item['file']['id']
+    # Text processing
+    if len(text) > 4090:
+        text = text[:4087] + '...'
 
-    if noformat:
+    if raw:
         markup = None
-        if 'parse_mode' not in db_item or db_item['parse_mode'] == 'none':
+        if not note.parse_mode:
             text += '\n%PARSEMODE_NONE'
-        elif db_item['parse_mode'] == 'html':
+        elif note.parse_mode == 'html':
             text += '\n%PARSEMODE_HTML'
 
-        if 'preview' in db_item and db_item['preview']:
+        if note.preview:
             text += '\n%PREVIEW'
 
-        db_item['parse_mode'] = None
-
     else:
-        pm = True if message.chat.type == 'private' else False
-        text, markup = button_parser(chat_id, text, pm=pm)
+        pm = message.chat.type == 'private'
 
-        if not text and not file_id:
-            text = ('#' + db_item['names'][0]) if 'names' in db_item else '404'
+        if text:
+            text, markup = button_parser(chat_id, text, pm=pm)
+            text = await vars_parser(
+                text,
+                message,
+                md=True if note.parse_mode == 'md' else False,
+                event=event,
+                user=user or message.from_user
+            )
+            text = random_parser(text)
 
-        if 'parse_mode' not in db_item or db_item['parse_mode'] == 'none':
-            db_item['parse_mode'] = None
-        elif db_item['parse_mode'] == 'md':
-            text = await vars_parser(text, message, chat_id, md=True, event=event, user=user)
-        elif db_item['parse_mode'] == 'html':
-            text = await vars_parser(text, message, chat_id, md=False, event=event, user=user)
+            # Convert markdown format
+            if note.parse_mode is ParseMode.md:
+                text = text
 
-        if 'preview' in db_item and db_item['preview']:
-            preview = True
+    if not text and not file_id:
+        text = 'No content'  # TODO: translateable
 
     return text, {
         'buttons': markup,
-        'parse_mode': db_item['parse_mode'],
+        'parse_mode': None if raw else note.parse_mode.value,
         'file': file_id,
-        'link_preview': preview
+        'link_preview': note.preview
     }
 
 
-async def send_note(send_id, text, **kwargs):
-    if text:
-        text = text[:4090]
-
-    if 'parse_mode' in kwargs and kwargs['parse_mode'] == 'md':
-        kwargs['parse_mode'] = tmarkdown
-
+async def send_note(send_id, text, media_separate=False, **kwargs):
     try:
-        return await tbot.send_message(send_id, text, **kwargs)
+        msgs = []
+        if media_separate and text:
+            # Sticker text workaround
+            # Media
+            media_kwargs = kwargs.copy()
+            del media_kwargs['buttons']
+            msgs.append(await tbot.send_message(send_id, text, **media_kwargs))
+            # Text
+            del kwargs['file']
+
+        msgs.append(await tbot.send_message(send_id, text, **kwargs))
+        return msgs
 
     except (ButtonUrlInvalidError, MessageEmptyError, MediaEmptyError):
-        return await tbot.send_message(send_id, 'I found this note invalid! Please update it (read Wiki).')
-
-    except BadRequestError:  # if reply message deleted
-        del kwargs['reply_to']
-        return await tbot.send_message(send_id, text, **kwargs)
+        return [await bot.send_message(send_id, 'I found this note invalid! Please update it (read Wiki).')]
 
     except Exception as err:
         log.error("Something happened on sending note", exc_info=err)
 
 
-def button_parser(chat_id, texts, pm=False, aio=False, row_width=None):
-    buttons = InlineKeyboardMarkup(row_width=row_width) if aio else []
-    pattern = r'\[(.+?)\]\((button|btn|#)(.+?)(:.+?|)(:same|)\)(\n|)'
-    raw_buttons = re.findall(pattern, texts)
-    text = re.sub(pattern, '', texts)
+def button_parser(chat_id: ChatId, texts: str, pm=False) -> Tuple[str, Optional[List[Button]]]:
+    # buttons = InlineKeyboardMarkup(row_width=row_width)
+    buttons: List[Button] = []
+    raw_buttons = BUTTONS_REGEXP.findall(texts)
+    text = BUTTONS_REGEXP.sub('', texts)
+
     btn = None
     for raw_button in raw_buttons:
         name = raw_button[0]
@@ -344,21 +268,18 @@ def button_parser(chat_id, texts, pm=False, aio=False, row_width=None):
 
         if raw_button[3]:
             argument = raw_button[3][1:].lower().replace('`', '')
-        elif action in ('#'):
+        elif action == '#':
             argument = raw_button[2]
-            print(raw_button[2])
         else:
             argument = ''
 
         if action in BUTTONS.keys():
             cb = BUTTONS[action]
             string = f'{cb}_{argument}_{chat_id}' if argument else f'{cb}_{chat_id}'
-            if aio:
-                start_btn = InlineKeyboardButton(name, url=f'https://t.me/{BOT_USERNAME}?start=' + string)
-                cb_btn = InlineKeyboardButton(name, callback_data=string)
-            else:
-                start_btn = Button.url(name, f'https://t.me/{BOT_USERNAME}?start=' + string)
-                cb_btn = Button.inline(name, string)
+            # start_btn = InlineKeyboardButton(name, url=START_URL + string)
+            # cb_btn = InlineKeyboardButton(name, callback_data=string)
+            start_btn = Button.url(name, START_URL + string)
+            cb_btn = Button.inline(name, string)
 
             if cb.endswith('sm'):
                 btn = cb_btn if pm else start_btn
@@ -376,7 +297,8 @@ def button_parser(chat_id, texts, pm=False, aio=False, row_width=None):
             argument = raw_button[3][1:].replace('`', '') if raw_button[3] else ''
             if argument[0] == '/' and argument[1] == '/':
                 argument = argument[2:]
-            btn = InlineKeyboardButton(name, url=argument) if aio else Button.url(name, argument)
+            # btn = InlineKeyboardButton(name, url=argument) 
+            btn = Button.url(name, argument)
         else:
             # If btn not registred
             btn = None
@@ -387,32 +309,22 @@ def button_parser(chat_id, texts, pm=False, aio=False, row_width=None):
                 continue
 
         if btn:
-            if aio:
-                buttons.insert(btn) if raw_button[4] else buttons.add(btn)
+            # buttons.insert(btn) if raw_button[4] else buttons.add(btn)
+            if len(buttons) < 1 and raw_button[4]:
+                # buttons.add(btn)
+                buttons.append([btn])
             else:
-                if len(buttons) < 1 and raw_button[4]:
-                    buttons.add(btn) if aio else buttons.append([btn])
-                else:
-                    buttons[-1].append(btn) if raw_button[4] else buttons.append([btn])
+                buttons[-1].append(btn) if raw_button[4] else buttons.append([btn])
 
-    if not aio and len(buttons) == 0:
-        buttons = None
-
-    if not text or text.isspace():  # TODO: Sometimes we can return text == ' '
-        text = None
-
-    return text, buttons
+    return text, buttons or None  # None not needed for aiogram
 
 
-async def vars_parser(text, message, chat_id, md=False, event: Message = None, user=None):
+async def vars_parser(text: str, message: Message, md=False, event: Message = None, user=None) -> str:
     if event is None:
         event = message
 
     if not text:
         return text
-
-    language_code = await get_chat_lang(chat_id)
-    current_datetime = datetime.now()
 
     first_name = html.escape(user.first_name, quote=False)
     last_name = html.escape(user.last_name or "", quote=False)
@@ -429,13 +341,8 @@ async def vars_parser(text, message, chat_id, md=False, event: Message = None, u
 
     chat_id = message.chat.id
     chat_name = html.escape(message.chat.title or 'Local', quote=False)
-    chat_nick = message.chat.username or chat_name
 
-    current_date = html.escape(format_date(date=current_datetime, locale=language_code), quote=False)
-    current_time = html.escape(format_time(time=current_datetime, locale=language_code), quote=False)
-    current_timedate = html.escape(format_datetime(datetime=current_datetime, locale=language_code), quote=False)
-
-    text = text.replace('{first}', first_name) \
+    return text.replace('{first}', first_name) \
         .replace('{last}', last_name) \
         .replace('{fullname}', first_name + " " + last_name) \
         .replace('{id}', str(user_id).replace('{userid}', str(user_id))) \
@@ -443,8 +350,11 @@ async def vars_parser(text, message, chat_id, md=False, event: Message = None, u
         .replace('{username}', username) \
         .replace('{chatid}', str(chat_id)) \
         .replace('{chatname}', str(chat_name)) \
-        .replace('{chatnick}', str(chat_nick)) \
-        .replace('{date}', str(current_date)) \
-        .replace('{time}', str(current_time)) \
-        .replace('{timedate}', str(current_timedate))
+        .replace('{chatnick}', str(message.chat.username or chat_name))
+
+
+def random_parser(text: str) -> str:
+    for item in RANDOM_REGEXP.finditer(text):
+        random_item = choice(item.group(1).split('|'))
+        text = text.replace(item.group(0), str(random_item))
     return text

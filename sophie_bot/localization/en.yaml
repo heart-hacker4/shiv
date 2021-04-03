@@ -4,15 +4,28 @@ language_info:
 
 STRINGS:
   notes:
+    # Parse modes
+    md: "Markdown"
+    html: "HTML"
+    none: "No parsing"
+
     # /save
-    note_saved: "🗒 Note <code>{note_name}</code> saved in <b>{chat_title}</b>!"
-    note_updated: "🗒 Note <code>{note_name}</code> updated in <b>{chat_title}</b>!"
-    you_can_get_note: "\nYou can retrieve this note by using <code>/get {note_name}</code>, or <code>#{note_name}</code>"
+    saving_title: "Note saved in <b>{chat_name}</b>"
+    status: "Status"
+    saved: "Saved"
+    updated: "Updated"
+    names: "Names"
+    getting_tip: "Note getting tip"
+    you_can_get_notes: "You can retrieve notes by using <code>/get name</code>, or <code>#name</code>"
     # Translator note: please keep sure that you don't have space in the end of string
     note_aliases: "\nNote aliases:"
     blank_note: "Saving blank note is not allowed!"
     notename_cant_contain: "Note name can't contain \"<code>{symbol}</code>\"!"
-    note_group: "\nGroup: {name}"
+    group_cant_contain: "Group name can't contain \"<code>{symbol}</code>\"!"
+    group_name_collision: "<code>{name}</code> exists as a note already and cannot be used as a group name!"
+    note_name_collision: "This note name exists as a group already and cannot be used!"
+    note_group: "Group"
+    saved_too_much: "<b>Warning!</b> You are trying to save notes/groups over a limit! Please ask in @SophieSupport."
 
     # /get
     cant_find_note: I can't find this note in <b>{chat_name}</b>!
@@ -20,11 +33,14 @@ STRINGS:
     no_notes_pattern: "No notes found by pattern <code>%s</code>"
     u_mean: "\nDid you mean <code>#{note_name}</code>?"
 
+    # Get notes by group
+    group_notes_header: "Group filter"
+
     #/notes
     notelist_no_notes: "There aren't any notes in <b>{chat_title}</b>!"
     notelist_header: "Notes in {chat_name}"
     notes_in_private: "Click below button to get notes list."
-    search_pattern: Search pattern
+    search_pattern: "Search pattern"
 
     # /clear
     note_removed: "Note <code>#{note_name}</code> removed in <b>{chat_name}</b>!"
@@ -41,33 +57,52 @@ STRINGS:
 
     # /search
     search_header: "Search request in {chat_name}"
+    query_not_found: "Nothing was found in <b>{chat_name}</b> by your query!"
 
     # /noteinfo
     note_info_title: "Note info"
     note_info_note: "Note names"
+    note_info_desc: "Description"
+    note_info_preview: "Preview"
     note_info_content: "Note content"
     note_info_parsing: "Parse mode"
     note_info_group: "Group"
-    note_info_created: "Was created in: <code>{date}</code> by {user}"
-    note_info_updated: "Last updated in: <code>{date}</code> by {user}"
+    note_info_created: "Created"
+    note_info_updated: "Last updated"
+    note_info_user_form: "by {user} ({user_id})"
+    note_info_note_url: "Note URL"
     user_blocked: "Write /start in my PM!"
+    # Note content
+    text: "Text"
+    sticker: "Sticker"
+    photo: "Photo"
+    document: "Document"
+    video: "Video"
+    audio: "Audio"
+    video_note: "Video note"
+    voice: "Voice"
 
     # /privatenotes
-    private_notes_false_args: "You have 2 options <code>Disable</code> and <code>Enable</code> !"
-    already_enabled: "Private notes are already enabled in %s"
+    already_enabled: "Private notes are already enabled in <b>{chat_name}</b>"
+    already_disabled: "Private notes are already disabled in <b>{chat_name}</b>"
     current_state_info: "Currently private note is {state} in {chat} ! "
-    enabled_successfully: "Private notes are <b>Enabled</b> in %s successfully!"
-    disabled_successfully: "Private notes are <b>Disabled</b> in %s successfully!"
+    enabled_successfully: "Private notes are <b>Enabled</b> in <b>{chat_name}</b> successfully!"
+    disabled_successfully: "Private notes are <b>Disabled</b> in <b>{chat_name}</b> successfully!"
     not_enabled: "Private notes are not enabled to disable."
     privatenotes_notif: "You have been successfully connected to <b>{chat}</b> notes! To disconnect please use command <code>/disconnect</code> !"
     enabled: 'Enabled'
     disabled: 'Disabled'
+    wrong_keyword: 'Wrong keyword! Please provide "disable" or "enable"'
+    pn_text: "Please click button below to get chat's notes"
+    pn_btn: "Chat notes"
 
     # /cleannotes
-    clean_notes_enable: "Cleaning notes successfully enabled in <b>{chat_name}</b>"
-    clean_notes_disable: "Cleaning notes successfully disabled in <b>{chat_name}</b>"
-    clean_notes_enabled: "Cleaning notes currently is <b>enabled</b> in <b>{chat_name}</b>"
-    clean_notes_disabled: "Cleaning notes currently is <b>disabled</b> in <b>{chat_name}</b>"
+    already_enabled_clean_notes: "Cleaning old notes are already enabled in <b>{chat_name}</b>"
+    already_disabled_clean_notes: "Cleaning old notes are already disabled in <b>{chat_name}</b>"
+    clean_notes_enable: "Cleaning old notes successfully enabled in <b>{chat_name}</b>"
+    clean_notes_disable: "Cleaning old notes successfully disabled in <b>{chat_name}</b>"
+    clean_notes_enabled: "Cleaning old notes currently is <b>enabled</b> in <b>{chat_name}</b>"
+    clean_notes_disabled: "Cleaning old notes currently is <b>disabled</b> in <b>{chat_name}</b>"
 
     # Filter
     filters_title: 'Send a note'
@@ -547,7 +582,12 @@ STRINGS:
     bad_file: Bad file! Expected <code>'general'</code> column.
     file_version_so_new: Exported file version is newer than Sophie currently supports!
     imports_locked: Please wait %s till using imports again!
-    import_done: Import done!
+    import_error_header: "Error importing data file!"
+    module_name: "Module name"
+    error_msg: "Data file errors"
+    import_done: "Import finished in <b>{chat_name}</b>!"
+    import_append: "New data was appended"
+    import_replace: "Data was overwrited"
   restrictions:
     user_not_in_chat: User not in this chat!
 

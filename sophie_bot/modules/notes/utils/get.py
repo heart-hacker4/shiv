@@ -18,17 +18,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sophie_bot import bot
-from sophie_bot.services.mongo import db
-from ...utils.language import get_strings_dec
-from ...utils.notes import t_unparse_note_item, send_note
+import difflib
+from typing import List, Optional
 
-from ...utils.text import *
+from odmantic import query
+
+from sophie_bot.models.notes import BaseNote
+from sophie_bot.services.mongo import db, engine
+from ..models import SavedNote
+from sophie_bot.modules.utils.notes import unparse_note_item, send_note
+from sophie_bot.modules.utils.text import Section, KeyValue, VList
+
+
+def get_note_name(arg: str) -> str:
+    if arg[0] == '#':
+        arg = arg[1:]
+
+    return arg
+
+
+async def find_note(arg: str, chat_id: int) -> Optional[SavedNote]:
+    note_name = get_note_name(arg)
+
+    if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name]))):
+        return note
+
+    return None
 
 
 async def get_similar_note(chat_id, note_name):
     all_notes = []
-    async for note in db.notes.find({'chat_id': chat_id}):
+    async for note in db.saved_note.find({'chat_id': chat_id}):
         all_notes.extend(note['names'])
 
     if len(all_notes) > 0:
@@ -39,8 +59,7 @@ async def get_similar_note(chat_id, note_name):
     return None
 
 
-@get_strings_dec('notes')
-async def get_note(message, strings, note_name=None, db_item=None,
+async def get_note(message, note: BaseNote,
                    chat_id=None, send_id=None, rpl_id=None, noformat=False, event=None, user=None):
     if not chat_id:
         chat_id = message.chat.id
@@ -53,51 +72,52 @@ async def get_note(message, strings, note_name=None, db_item=None,
     elif not rpl_id:
         rpl_id = message.message_id
 
-    if not db_item and not (db_item := await db.notes.find_one({'chat_id': chat_id, 'names': {'$in': [note_name]}})):
-        await bot.send_message(
-            chat_id,
-            strings['no_note'],
-            reply_to_message_id=rpl_id
-        )
-        return
-
-    text, kwargs = await t_unparse_note_item(message, db_item, chat_id, noformat=noformat, event=event, user=user)
+    text, kwargs = await unparse_note_item(message, note, chat_id, raw=noformat, event=event, user=user)
     kwargs['reply_to'] = rpl_id
 
-    return await send_note(send_id, text, **kwargs)
+    # Send text in different message for stickers
+    if note.file and note.file.type == 'sticker':
+        media_separate = True
+    else:
+        media_separate = False
+
+    return await send_note(send_id, text, media_separate=media_separate, **kwargs)
 
 
-@get_strings_dec('notes')
-async def get_notes_list(message, chat, strings, keyword=None):
-    if not (notes := await db.notes.find({'chat_id': chat['chat_id']}).sort("names", 1).to_list(length=300)):
-        return await message.reply(strings["notelist_no_notes"].format(chat_title=chat['chat_title']))
+async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
+    return await engine.find(
+        SavedNote,
+        query.and_(
+            SavedNote.chat_id == chat_id,
+            *filters
+        ),
+        sort=(SavedNote.group, SavedNote.names),
+        limit=300
+    ) or None
 
-    doc = SanTeXDoc()
-    notes_section = Section(title=strings['notelist_header'].format(chat_name=chat['chat_title']))
 
-    # Search
-    pattern = keyword or message.get_args()
-    if pattern and len(pattern) > 0:
-        notes_section += KeyValue(strings['search_pattern'], Code(pattern))
+async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hidden=False) -> List[Section]:
+    if not notes:
+        return []
 
-        all_notes = notes
-        notes = []
-        for note in all_notes:
-            for note_name in note['names']:
-                if pattern in note_name:
-                    notes.append(note)
-                    break
+    notes_section = []
 
-    notes_list = []
-    for note in notes:
-        note_names = ''
-        for note_name in note['names']:
-            note_names += f'<code>#{note_name}</code> '
+    for group in group_filter or list(set([x.group for x in notes])):
+        if group in ['hidden', 'admin'] and not show_hidden:
+            continue
 
-        notes_list.append(note_names)
+        notes_list = []
 
-    notes_section += SList(*notes_list)
-    doc += notes_section
-    doc += strings['you_can_get_note'].format(note_name='notename')
+        for note in [x for x in notes if x.group == group]:
+            if name_filter and not any([name_filter in x.lower() for x in note.names]):
+                continue
 
-    return await message.reply(str(doc))
+            item_text = '#' + ' #'.join(note.names)
+            if note.description:
+                notes_list.append(KeyValue(item_text, note.description, title_bold=False))
+            else:
+                notes_list.append(item_text)
+        if notes_list:
+            notes_section.append(Section(VList(*notes_list), title=f'#{group or "nogroup"}', title_underline=False))
+
+    return notes_section

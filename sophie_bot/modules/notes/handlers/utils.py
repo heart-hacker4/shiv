@@ -19,15 +19,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import suppress
-from datetime import datetime
 
 from aiogram.utils.exceptions import MessageNotModified
-from pymongo import ReplaceOne
+from pymongo import UpdateOne
 
-from sophie_bot.services.mongo import db
+from sophie_bot.modules.utils.language import get_string
+from sophie_bot.services.mongo import db, engine
+from ..models import SavedNote, PrivateNotes, CleanNotes, ExportModel, MAX_NOTES_PER_CHAT
 from ..utils.get import get_note
-from ...utils.language import get_string
-from ...utils.notes import ALLOWED_COLUMNS
+from ..utils.saving import get_notes_count
+
+__data_model__ = ExportModel
 
 
 async def __stats__():
@@ -37,45 +39,45 @@ async def __stats__():
     return text
 
 
-async def __export__(chat_id):
-    data = []
-    notes = await db.notes.find({'chat_id': chat_id}).sort("names", 1).to_list(length=300)
-    for note in notes:
-        del note['_id']
-        del note['chat_id']
-        note['created_date'] = str(note['created_date'])
-        if 'edited_date' in note:
-            note['edited_date'] = str(note['edited_date'])
-        data.append(note)
-
-    return {'notes': data}
+async def __export_data__(chat_id) -> ExportModel:
+    return ExportModel(
+        notes=await engine.find(SavedNote, SavedNote.chat_id == chat_id),
+        private_notes=True if await engine.find_one(PrivateNotes, PrivateNotes.chat_id == chat_id) else False,
+        clean_notes=True if await engine.find_one(CleanNotes, CleanNotes.chat_id == chat_id) else False
+    )
 
 
-ALLOWED_COLUMNS_NOTES = ALLOWED_COLUMNS + [
-    'names',
-    'created_date',
-    'created_user',
-    'edited_date',
-    'edited_user'
-]
+async def __import_data__(chat_id: int, data: ExportModel, overwrite=False):
+    if overwrite:
+        async for note in engine.find(SavedNote, SavedNote.chat_id == chat_id):
+            await engine.delete(note)
 
+        count_notes = 0
+    else:
+        count_notes = await get_notes_count(chat_id)
 
-async def __import__(chat_id, data):
-    if not data:
-        return
+    # Notes limit
+    if count_notes + len(data.notes) > MAX_NOTES_PER_CHAT:
+        pass
+    # TODO: groups limit
 
-    new = []
-    for note in data:
-        for item in [i for i in note if i not in ALLOWED_COLUMNS_NOTES]:
-            del note[item]
+    batch_actions = []
+    for note in data.notes:
+        batch_actions.append(UpdateOne(
+            (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note.names)),
+            {
+                # We don't want to allow to update note's chat_id and its id
+                '$set': {
+                    +SavedNote.chat_id: chat_id, **note.dict(
+                        exclude={'chat_id', 'id', 'created_date', 'created_user'})
+                },
+                # Update created fields only on insert
+                '$setOnInsert': {**note.dict(include={'created_date', 'created_user'})}
+            },
+            upsert=True
+        ))
 
-        note['chat_id'] = chat_id
-        note['created_date'] = datetime.fromisoformat(note['created_date'])
-        if 'edited_date' in note:
-            note['edited_date'] = datetime.fromisoformat(note['edited_date'])
-        new.append(ReplaceOne({'chat_id': note['chat_id'], 'names': {'$in': [note['names'][0]]}}, note, upsert=True))
-
-    await db.notes.bulk_write(new)
+    await engine.get_collection(SavedNote).bulk_write(batch_actions)
 
 
 async def filter_handle(message, chat, data):

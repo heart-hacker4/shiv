@@ -25,11 +25,12 @@ from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.utils.exceptions import MessageCantBeDeleted
 
 from sophie_bot.decorator import register
-from sophie_bot.services.mongo import db
+from sophie_bot.modules.utils.notes import BUTTONS
+from sophie_bot.services.mongo import engine
 from sophie_bot.services.redis import redis
+from ..models import SavedNote
 from ..utils.get import get_note
 from ...utils.language import get_strings_dec
-from ...utils.notes import BUTTONS
 
 BUTTONS.update({'note': 'btnnotesm', '#': 'btnnotesm'})
 
@@ -41,13 +42,14 @@ async def note_btn(event, strings, regexp=None, **kwargs):
     user_id = event.from_user.id
     note_name = regexp.group(1).lower()
 
-    if not (note := await db.notes.find_one({'chat_id': chat_id, 'names': {'$in': [note_name]}})):
+    if not (
+    note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
         await event.answer(strings['no_note'])
         return
 
     with suppress(MessageCantBeDeleted):
         await event.message.delete()
-    await get_note(event.message, db_item=note, chat_id=chat_id, send_id=user_id, rpl_id=None, event=event)
+    await get_note(event.message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None, event=event)
 
 
 @register(CommandStart(re.compile(r'btnnotesm')), allow_kwargs=True)
@@ -59,11 +61,12 @@ async def note_start(message, strings, regexp=None, **kwargs):
     user_id = message.from_user.id
     note_name = args.group(2).strip("_")
 
-    if not (note := await db.notes.find_one({'chat_id': chat_id, 'names': {'$in': [note_name]}})):
+    if not (
+    note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
         await message.reply(strings['no_note'])
         return
 
-    await get_note(message, db_item=note, chat_id=chat_id, send_id=user_id, rpl_id=None)
+    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None)
 
 
 @register(cmds='start', only_pm=True)
@@ -77,7 +80,7 @@ async def btn_note_start_state(message, strings):
     user_id = message.from_user.id
     note_name = cached['notename']
 
-    note = await db.notes.find_one({'chat_id': chat_id, 'names': {'$in': [note_name]}})
-    await get_note(message, db_item=note, chat_id=chat_id, send_id=user_id, rpl_id=None)
+    note = await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))
+    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None)
 
     redis.delete(key)

@@ -47,7 +47,7 @@ from sophie_bot.stuff.fonts import ALL_FONTS
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 from .utils.message import need_args_dec, convert_time
-from .utils.notes import get_parsed_note_list, t_unparse_note_item, send_note
+from .utils.notes import get_parsed_note_list, unparse_note_item, send_note
 from .utils.restrictions import mute_user, restrict_user, unmute_user, kick_user
 from .utils.user_details import is_user_admin, get_user_link, check_admin_rights
 from ..utils.cached import cached
@@ -78,7 +78,7 @@ async def welcome(message, chat, strings):
 
     if no_format:
         await message.reply(strings['raw_wlcm_note'])
-        text, kwargs = await t_unparse_note_item(message, db_item['note'], chat_id, noformat=True)
+        text, kwargs = await unparse_note_item(message, db_item['note'], chat_id, raw=True)
         await send_note(send_id, text, **kwargs)
         return
 
@@ -102,7 +102,7 @@ async def welcome(message, chat, strings):
     if 'welcome_disabled' not in db_item:
         text += strings['wlcm_note']
         await message.reply(text)
-        text, kwargs = await t_unparse_note_item(message, db_item['note'], chat_id)
+        text, kwargs = await unparse_note_item(message, db_item['note'], chat_id)
         await send_note(send_id, text, **kwargs)
     else:
         await message.reply(text)
@@ -111,7 +111,7 @@ async def welcome(message, chat, strings):
         if 'security_note' not in db_item:
             db_item['security_note'] = {'text': strings['default_security_note']}
         await message.reply(strings['security_note'])
-        text, kwargs = await t_unparse_note_item(message, db_item['security_note'], chat_id)
+        text, kwargs = await unparse_note_item(message, db_item['security_note'], chat_id)
         await send_note(send_id, text, **kwargs)
 
 
@@ -426,7 +426,7 @@ async def set_security_note(message, chat, strings):
             db_item['security_note']['text'] = strings['default_security_note']
             db_item['security_note']['parse_mode'] = 'md'
 
-        text, kwargs = await t_unparse_note_item(message, db_item['security_note'], chat_id, noformat=True)
+        text, kwargs = await unparse_note_item(message, db_item['security_note'], chat_id, raw=True)
         kwargs['reply_to'] = message.message_id
 
         await send_note(chat_id, text, **kwargs)
@@ -507,7 +507,7 @@ async def welcome_security_handler(message: Message, strings):
         db_item['security_note']['text'] = strings['default_security_note']
         db_item['security_note']['parse_mode'] = 'md'
 
-    text, kwargs = await t_unparse_note_item(message, db_item['security_note'], chat_id)
+    text, kwargs = await unparse_note_item(message, db_item['security_note'], chat_id)
 
     kwargs['reply_to'] = (None if 'clean_service' in db_item and db_item['clean_service']['enabled'] is True
                           else message.message_id)
@@ -810,7 +810,7 @@ async def welcome_security_passed(message: Union[CallbackQuery, Message], state,
 
     # Welcome
     if 'note' in db_item and db_item.get("welcome_disabled", True) is False:
-        text, kwargs = await t_unparse_note_item(
+        text, kwargs = await unparse_note_item(
             message.reply_to_message if message.reply_to_message is not None else message,
             db_item['note'],
             chat_id
@@ -873,7 +873,7 @@ async def welcome_trigger(message: Message, strings):
         }
     reply_to = (message.message_id if 'clean_welcome' in db_item and db_item['clean_welcome']['enabled'] is not False
                 else None)
-    text, kwargs = await t_unparse_note_item(message, db_item['note'], chat_id)
+    text, kwargs = await unparse_note_item(message, db_item['note'], chat_id)
     msg = await send_note(chat_id, text, reply_to=reply_to, **kwargs)
     # Clean welcome
     if 'clean_welcome' in db_item and db_item['clean_welcome']['enabled'] is not False:

@@ -27,8 +27,8 @@ from .utils.connections import chat_connection
 from .utils.disable import disableable_dec
 from .utils.language import get_strings_dec
 from .utils.notes import (
-    ALLOWED_COLUMNS, BUTTONS, get_parsed_note_list,
-    send_note, t_unparse_note_item
+    BUTTONS, get_parsed_note_list,
+    send_note, unparse_note_item
 )
 
 
@@ -73,7 +73,7 @@ async def rules(message, chat, strings):
         await message.reply(strings['not_found'])
         return
 
-    text, kwargs = await t_unparse_note_item(message, db_item, chat_id, noformat=noformat)
+    text, kwargs = await unparse_note_item(message, db_item, chat_id, raw=noformat)
     kwargs['reply_to'] = rpl_id
 
     await send_note(send_id, text, **kwargs)
@@ -104,7 +104,7 @@ async def rules_btn(message, strings):
         await message.answer(strings['not_found'])
         return
 
-    text, kwargs = await t_unparse_note_item(message, db_item, chat_id)
+    text, kwargs = await unparse_note_item(message, db_item, chat_id)
     await send_note(user_id, text, **kwargs)
 
 
@@ -119,7 +119,7 @@ async def __export__(chat_id):
 
 async def __import__(chat_id, data):
     rules = data
-    for column in [i for i in data if i not in ALLOWED_COLUMNS]:
+    for column in [i for i in data if i not in []]:
         del rules[column]
 
     rules['chat_id'] = chat_id

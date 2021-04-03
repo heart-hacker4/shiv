@@ -18,13 +18,8 @@
 
 from datetime import timedelta
 
-
-# elif raw_button[1] == 'note':
-# t = InlineKeyboardButton(raw_button[0], callback_data='get_note_{}_{}'.format(chat_id, raw_button[2]))
-# elif raw_button[1] == 'alert':
-# t = InlineKeyboardButton(raw_button[0], callback_data='get_alert_{}_{}'.format(chat_id, raw_button[2]))
-# elif raw_button[1] == 'deletemsg':
-# t = InlineKeyboardButton(raw_button[0], callback_data='get_delete_msg_{}_{}'.format(chat_id, raw_button[2]))
+ENABLE_KEYWORDS = ('true', 'enable', 'on')
+DISABLE_KEYWORDS = ('false', 'disable', 'off')
 
 
 class InvalidTimeUnit(Exception):
