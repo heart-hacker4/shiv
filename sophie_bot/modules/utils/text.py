@@ -1,4 +1,4 @@
-# Copyright (C) 2018 - 2020 MrYacha.
+# Copyright (C) 2020 - 2021 MrYacha.
 # Copyright (C) 2020 SitiSchu.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 #
 # This file is part of Sophie.
 
-from typing import Union
+from typing import Any
 
 
 class SanTeXDoc:
@@ -26,17 +26,20 @@ class SanTeXDoc:
     def __str__(self) -> str:
         return '\n'.join([str(items) for items in self.items])
 
-    def __add__(self, other):
+    def add(self, other: Any):
         self.items.append(other)
         return self
+
+    def __add__(self, other):
+        return self.add(other)
 
 
 class StyleFormationCore:
     start: str
     end: str
 
-    def __init__(self, text: str):
-        self.text = f'{self.start}{text}{self.end}'
+    def __init__(self, data: Any):
+        self.text = f'{self.start}{str(data)}{self.end}'
 
     def __str__(self) -> str:
         return self.text
@@ -73,29 +76,35 @@ class Underline(StyleFormationCore):
 
 
 class Section:
-    def __init__(self, *args, title='', indent=3, bold=True, postfix=':'):
+    def __init__(self, *args, title: str = '', title_underline=True, title_bold=True, indent=2, postfix=':'):
         self.title_text = title
         self.items = list(args)
         self.indent = indent
-        self.bold = bold
+        self.title_underline = title_underline
+        self.title_bold = title_bold
         self.postfix = postfix
 
     @property
     def title(self) -> str:
         title = self.title_text
-        text = str(Bold(title)) if self.bold else title
+        text = str(Underline(title)) if self.title_underline else title
+        if self.title_bold:
+            text = str(Bold(text))
         text += self.postfix
         return text
 
     def __str__(self) -> str:
-        text = self.title
+        text = ''
+        text += self.title
         space = ' ' * self.indent
         for item in self.items:
             text += '\n'
 
             if type(item) == Section:
                 item.indent *= 2
-            if type(item) == SList:
+            if type(item) == VList:
+                item.indent = self.indent
+            if type(item) == Text:
                 item.indent = self.indent
             else:
                 text += space
@@ -104,12 +113,15 @@ class Section:
 
         return text
 
-    def __add__(self, other):
+    def add(self, other: Any):
         self.items.append(other)
         return self
 
+    def __add__(self, other):
+        return self.add(other)
 
-class SList:
+
+class VList:
     def __init__(self, *args, indent=0, prefix='- '):
         self.items = list(args)
         self.prefix = prefix
@@ -125,31 +137,51 @@ class SList:
 
         return text
 
+    def add(self, other: Any):
+        self.items.append(other)
+        return self
+
+    def __add__(self, other):
+        return self.add(other)
+
+
+class HList:
+    def __init__(self, *args, prefix=''):
+        self.items = list(args)
+        self.prefix = prefix
+
+    def __str__(self) -> str:
+        text = ''
+        for idx, item in enumerate(self.items):
+            if idx > 0:
+                text += ' '
+            if self.prefix:
+                text += self.prefix
+            text += str(item)
+
+        return text
+
+    def add(self, other: Any):
+        self.items.append(other)
+        return self
+
+    def __add__(self, other):
+        return self.add(other)
+
+
+class Text:
+    def __init__(self, data: Any):
+        self.data = data
+
+    def __str__(self):
+        return str(self.data)
+
 
 class KeyValue:
-    def __init__(self, title, value, suffix=': '):
-        self.title = title
+    def __init__(self, title, value, suffix=': ', title_bold=True):
+        self.title = Bold(title) if title_bold else title
         self.value = value
         self.suffix = suffix
 
     def __str__(self) -> str:
-        text = f'{self.title}{self.suffix}{self.value}'
-        return text
-
-
-class MultiKeyValue:
-    def __init__(self, *items: Union[list, tuple], suffix=': ', separator=', '):
-        self.items: list = items
-        self.suffix = suffix
-        self.separator = separator
-
-    def __str__(self) -> str:
-        text = ''
-        items_count = len(self.items)
-        for idx, item in enumerate(self.items):
-            text += f'{item[0]}{self.suffix}{item[1]}'
-
-            if items_count - 1 != idx:
-                text += self.separator
-
-        return text
+        return f'{self.title}{self.suffix}{self.value}'
