@@ -102,9 +102,10 @@ class Section:
 
             if type(item) == Section:
                 item.indent *= 2
-            if type(item) == VList:
-                item.indent = self.indent
             if type(item) == Text:
+                item.indent = self.indent
+
+            if type(item) == VList:
                 item.indent = self.indent
             else:
                 text += space
@@ -128,6 +129,7 @@ class VList:
         self.indent = indent
 
     def __str__(self) -> str:
+        print(self.indent)
         space = ' ' * self.indent if self.indent else ' '
         text = ''
         for idx, item in enumerate(self.items):
