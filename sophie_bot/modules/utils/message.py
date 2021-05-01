@@ -18,8 +18,8 @@
 
 from datetime import timedelta
 
-ENABLE_KEYWORDS = ('true', 'enable', 'on')
-DISABLE_KEYWORDS = ('false', 'disable', 'off')
+ENABLE_KEYWORDS = ('true', 'enable', 'on', '1', 'yes')
+DISABLE_KEYWORDS = ('false', 'disable', 'off', '0', 'no')
 
 
 class InvalidTimeUnit(Exception):

@@ -79,8 +79,8 @@ async def get_notes_list_cmd(message, chat, strings):
     sections = [KeyValue(strings['search_pattern'], Code(arg))] if arg else []
 
     if not (notes_section := await get_notes_sections(
-            await get_notes(chat['chat_id']), name_filter=arg, show_hidden=show_hidden)
-    ):
+            await get_notes(chat['chat_id']), name_filter=arg, show_hidden=show_hidden, purify_groups=True),
+            ):
         return await message.reply(strings["notelist_no_notes"].format(chat_title=chat['chat_title']))
 
     sections += notes_section

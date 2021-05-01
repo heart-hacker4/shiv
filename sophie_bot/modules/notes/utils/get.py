@@ -24,10 +24,10 @@ from typing import List, Optional
 from odmantic import query
 
 from sophie_bot.models.notes import BaseNote
-from sophie_bot.services.mongo import db, engine
-from ..models import SavedNote
 from sophie_bot.modules.utils.notes import unparse_note_item, send_note
 from sophie_bot.modules.utils.text import Section, KeyValue, VList
+from sophie_bot.services.mongo import db, engine
+from ..models import SavedNote
 
 
 def get_note_name(arg: str) -> str:
@@ -96,13 +96,14 @@ async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
     ) or None
 
 
-async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hidden=False) -> List[Section]:
+async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hidden=False,
+                             purify_groups=False) -> List[Section]:
     if not notes:
         return []
 
     notes_section = []
 
-    for group in group_filter or list(set([x.group for x in notes])):
+    for group in group_filter or (groups := list(set([x.group for x in notes]))):
         if group in ['hidden', 'admin'] and not show_hidden:
             continue
 
@@ -119,5 +120,11 @@ async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hi
                 notes_list.append(item_text)
         if notes_list:
             notes_section.append(Section(VList(*notes_list), title=f'#{group or "nogroup"}', title_underline=False))
+
+        # Remove groups section if there is only 'nogroup' and purify_groups is on
+        if purify_groups and len(groups) == 1 and not groups[0]:
+            # The first element is 'nogroup' secion
+            del notes_section[0]
+            notes_section.extend(notes_list)
 
     return notes_section
