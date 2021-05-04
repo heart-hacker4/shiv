@@ -1,53 +1,50 @@
-from datetime import datetime
+import asyncio
+from typing import List
 
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types import Message, ContentType
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.callback_data import CallbackData
+from bson import ObjectId
 
 from sophie_bot.decorator import register
+from sophie_bot.models.notes import NoteFile
 from sophie_bot.modules.utils.connections import chat_connection
 from sophie_bot.modules.utils.language import get_strings_dec
-from sophie_bot.modules.utils.message import get_arg, need_args_dec, get_args
+from sophie_bot.modules.utils.message import need_args_dec
+from sophie_bot.modules.utils.notes_parser.encode import get_msg_file
 from sophie_bot.modules.utils.notes_parser.encode import get_parsed_note_list
-from sophie_bot.modules.utils.text import STFDoc, Section, KeyValue, HList, Code
-from sophie_bot.services.mongo import db, engine
-from ..models import SavedNote, MAX_NOTES_PER_CHAT, MAX_GROUPS_PER_CHAT
-from ..utils.get import get_similar_note
-from ..utils.saving import check_note_names, check_note_group, get_notes_count, get_groups_count, get_note_description
+from sophie_bot.services.mongo import engine
+from ..models import SavedNote
+from ..utils.saving import get_note_description, get_names_group, upsert_note, build_saved_text
+
+MEDIA_CONTENT_TYPES = [
+    ContentType.PHOTO,
+    ContentType.AUDIO,
+    ContentType.DOCUMENT,
+    ContentType.VIDEO
+]
+
+
+class SaveNoteMedia(StatesGroup):
+    work = State()
+
+
+note_media_done = CallbackData('note_media_done_cb', 'note_id')
+SAVE_MEDIA_GROUP_LOCK = asyncio.Lock()
 
 
 @register(cmds=['save', 'setnote', 'savenote'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
 @get_strings_dec('notes')
-async def save_note(message, chat, strings):
+async def save_note(message: Message, chat: dict, strings: dict):
     chat_id = chat['chat_id']
 
-    # Get note names
-    arg = get_arg(message).lower()
-
-    # Get note group
-    if '^' in arg:
-        arg = arg.replace((raw := arg.split('^', 1))[1], '')[:-1]
-        if sym := check_note_group(note_group := raw[1]):
-            return await message.reply(strings['group_cant_contain'].format(symbol=sym))
-
-        if await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_group]))):
-            return await message.reply(strings['group_name_collision'].format(name=note_group))
-    else:
-        note_group = None
-
-    note_names = [x.removeprefix('#') for x in arg.split('|')]
-    if sym := check_note_names(note_names):
-        return await message.reply(strings['notename_cant_contain'].format(symbol=sym))
-
-    # Notes limit
-    if await get_notes_count(chat_id) > MAX_NOTES_PER_CHAT:
-        return await message.reply(strings['saved_too_much'])
-    # Groups limit
-    if await get_groups_count(chat_id) > MAX_GROUPS_PER_CHAT:
-        return await message.reply(strings['saved_too_much'])
-
-    if await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.group.in_(note_names))):
-        return await message.reply(strings['note_name_collision'].format(name=note_group))
+    if type(data := await get_names_group(strings, message, chat_id)) is Message:
+        # Returned a error message, skip everything
+        return data
+    note_names, note_group = data
 
     note_data = await get_parsed_note_list(message)
     if not note_data.text and not note_data.file:
@@ -57,128 +54,122 @@ async def save_note(message, chat, strings):
     # Note description
     desc, note_data.text = get_note_description(note_data.text)
 
-    if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note_names))):
-        # status = 'updated'
-        note.names = note_names
-        note.description = desc
-        note.edited_date = datetime.now()
-        note.edited_user = message.from_user.id
-        note.note = note_data
-        note.group = note_group
-    else:
-        # status = 'saved'
-        note = SavedNote(
-            names=note_names,
-            description=desc,
-            chat_id=chat_id,
-            created_date=datetime.now(),
-            created_user=message.from_user.id,
-            note=note_data,
-            group=note_group
-        )
-
-    await engine.save(note)
-
-    # Build reply text
-    doc = STFDoc()
-    sec = Section(
-        # KeyValue(strings['status'], strings[status]),
-        KeyValue(strings['names'], HList(*note_names, prefix='#')),
-        KeyValue(strings['note_info_desc'], note.description),
-        KeyValue(strings['note_info_parsing'], Code(str(strings[note.note.parse_mode]))),
-        KeyValue(strings['note_info_preview'], note.note.preview),  # TODO: translateable
-        title=strings['saving_title'].format(chat_name=chat['chat_title'])
+    await upsert_note(
+        chat_id,
+        desc,
+        note_names,
+        message.from_user.id,
+        note_data,
+        note_group
     )
 
-    if note_group:
-        note_group = note_group
-        sec += KeyValue(strings['note_group'], f'#{note_group}')
-
-    doc += sec
-    doc += Section(strings['you_can_get_notes'], title=strings['getting_tip'])
+    doc = build_saved_text(
+        strings=strings,
+        chat_name=chat['chat_title'],
+        description=desc,
+        note_names=note_names,
+        note_data=note_data,
+        note_group=note_group
+    )
 
     await message.reply(str(doc))
 
 
-@register(cmds=['clear', 'delnote'])
-@chat_connection(admin=True)
+@register(cmds=['savemedia', 'savegallery', 'setmedia', 'setgallery'], user_admin=True, allow_kwargs=True)
 @need_args_dec()
-@get_strings_dec('notes')
-async def clear_multiple_notes(message, chat, strings):
-    # TODO: decorator
-    args = get_args(message)
-    if len(args) < 2 and '|' not in ''.join(args):
-        return
-
-    removed = ''
-    not_removed = ''
-    for note_name in note_names:
-        if note_name[0] == '#':
-            note_name = note_name[1:]
-
-        if not (note := await db.notes.find_one({'chat_id': chat['chat_id'], 'names': {'$in': [note_name]}})):
-            if len(note_names) <= 1:
-                text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
-                if alleged_note_name := await get_similar_note(chat['chat_id'], note_name):
-                    text += strings['u_mean'].format(note_name=alleged_note_name)
-                await message.reply(text)
-                return
-            else:
-                not_removed += ' #' + note_name
-                continue
-
-        await db.notes.delete_one({'_id': note['_id']})
-        removed += ' #' + note_name
-
-    if len(note_names) > 1:
-        text = strings['note_removed_multiple'].format(chat_name=chat['chat_title'], removed=removed)
-        if not_removed:
-            text += strings['not_removed_multiple'].format(not_removed=not_removed)
-        await message.reply(text)
-    else:
-        await message.reply(strings['note_removed'].format(note_name=note_name, chat_name=chat['chat_title']))
-
-
-@register(cmds=['clear', 'delnote'])
 @chat_connection(admin=True)
-@need_args_dec()
 @get_strings_dec('notes')
-async def clear_note(message, chat, strings):
+async def save_note_gallery(message: Message, chat: dict, strings: dict, state=None, **kwargs) -> Message:
     chat_id = chat['chat_id']
-    note_name = get_arg(message).lower().removeprefix('#')
 
-    if not (
-    note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
-        text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
-        if alleged_note_name := await get_similar_note(chat['chat_id'], note_name):
-            text += strings['u_mean'].format(note_name=alleged_note_name)
-        return await message.reply(text)
+    if type(data := await get_names_group(strings, message, chat_id)) is Message:
+        # Returned a error message, skip everything
+        return data
+    note_names, note_group = data
+    note_data = await get_parsed_note_list(message, skip_files=True)
 
-    await engine.delete(note)
-    await message.reply(strings['note_removed'].format(note_name=note_name, chat_name=chat['chat_title']))
+    # Note description
+    desc, note_data.text = get_note_description(note_data.text)
+
+    # Let's save a blank note, without a files, just text
+    note, status = await upsert_note(
+        chat_id,
+        desc,
+        note_names,
+        message.from_user.id,
+        note_data,
+        note_group
+    )
+    # Enter a state to save files
+    await SaveNoteMedia.work.set()
+    async with state.proxy() as proxy:
+        proxy['id'] = str(note.id)
+
+    buttons = InlineKeyboardMarkup().add(InlineKeyboardButton(
+        strings['done_button'],
+        callback_data=note_media_done.new(note_id=str(note.id))
+    ))
+
+    return await message.reply(
+        '\n'.join(map(lambda c: strings[c], ['send_files', 'send_files_1', 'send_files_2'])),
+        reply_markup=buttons
+    )
 
 
-@register(cmds='clearall')
+@register(state=SaveNoteMedia.work, content_types=MEDIA_CONTENT_TYPES, allow_kwargs=True)
 @chat_connection(admin=True)
 @get_strings_dec('notes')
-async def clear_all_notes(message, chat, strings):
-    # Ensure notes count
-    if not await db.notes.find_one({'chat_id': chat['chat_id']}):
-        await message.reply(strings['notelist_no_notes'].format(chat_title=chat['chat_title']))
+async def save_note_gallery_worker(message: Message, chat: dict, strings: dict, state=None, **kwargs) -> Message:
+    file = get_msg_file(message)
+
+    async with state.proxy() as proxy:
+        files: List[str] = proxy.get('files', [])
+        if 'file_type' not in proxy:
+            proxy['file_type'] = file['type']
+        else:
+            if proxy['file_type'] != file['type']:
+                return await message.reply('\n'.join(map(lambda c: strings[c], ['bad_file_type', 'bad_file_type_1'])))
+
+        if len(files) >= 10:
+            await state.finish()
+            return await message.reply(strings['too_much_files'])
+
+    # Append a new file id
+    async with SAVE_MEDIA_GROUP_LOCK:
+        async with state.proxy() as proxy:
+            if 'files' not in proxy:
+                proxy['files'] = []
+            proxy['files'].append(file['id'])
+
+
+@register(note_media_done.filter(), state=SaveNoteMedia.work, f='cb', is_admin=True, allow_kwargs=True)
+@chat_connection(admin=True)
+@get_strings_dec('notes')
+async def clear_all_notes_cb(event, chat, strings, state=None, callback_data=None, **kwargs):
+    async with state.proxy() as proxy:
+        files: List[str] = proxy['files']
+        file_type: str = proxy['file_type']
+
+    await state.finish()
+
+    if not (saved_note := await engine.find_one(
+            SavedNote, (SavedNote.chat_id == chat['chat_id']) & (SavedNote.id == ObjectId(callback_data['note_id']))
+    )):
         return
 
-    text = strings['clear_all_text'].format(chat_name=chat['chat_title'])
-    buttons = InlineKeyboardMarkup()
-    buttons.add(InlineKeyboardButton(strings['clearall_btn_yes'], callback_data='clean_all_notes_cb'))
-    buttons.add(InlineKeyboardButton(strings['clearall_btn_no'], callback_data='cancel'))
-    await message.reply(text, reply_markup=buttons)
+    saved_note.note.file = NoteFile(
+        type=file_type,
+        id=files
+    )
+    await engine.save(saved_note)
 
+    doc = build_saved_text(
+        strings=strings,
+        chat_name=chat['chat_title'],
+        description=saved_note.description,
+        note_names=saved_note.names,
+        note_data=saved_note.note,
+        note_group=saved_note.group
+    )
 
-@register(regexp='clean_all_notes_cb', f='cb', is_admin=True)
-@chat_connection(admin=True)
-@get_strings_dec('notes')
-async def clear_all_notes_cb(event, chat, strings):
-    num = (await db.notes.delete_many({'chat_id': chat['chat_id']})).deleted_count
-
-    text = strings['clearall_done'].format(num=num, chat_name=chat['chat_title'])
-    await event.message.edit_text(text)
+    await event.message.edit_text(str(doc))

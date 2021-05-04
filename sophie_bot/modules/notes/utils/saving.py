@@ -1,8 +1,16 @@
 import re
-from typing import List, Optional
+from datetime import datetime
+from typing import List, Optional, Union, Tuple
 
+from aiogram.types import Message
+
+from sophie_bot.models.notes import BaseNote
+from sophie_bot.modules.utils.message import get_arg
+from sophie_bot.modules.utils.text import STFDoc, HList, KeyValue, Section, Code
 from sophie_bot.services.mongo import engine, db
-from ..models import RESTRICTED_SYMBOLS, SavedNote
+from sophie_bot.types.chat import ChatId
+from ..models import RESTRICTED_SYMBOLS
+from ..models import SavedNote, MAX_NOTES_PER_CHAT, MAX_GROUPS_PER_CHAT
 
 REGEXP_NOTE_DESCRIPTION = re.compile(r'^("([^"]*)")')
 
@@ -36,3 +44,97 @@ async def get_notes_count(chat_id: int) -> int:
 
 async def get_groups_count(chat_id: int) -> int:
     return len(await db[+SavedNote].distinct('group', SavedNote.chat_id == chat_id))
+
+
+async def get_names_group(strings: dict, message: Message, chat_id: ChatId) -> Union[Message, Tuple[List[str], str]]:
+    # Get note names
+    arg = get_arg(message).lower()
+
+    # Get note group
+    if '^' in arg:
+        arg = arg.replace((raw := arg.split('^', 1))[1], '')[:-1]
+        if sym := check_note_group(note_group := raw[1]):
+            return await message.reply(strings['group_cant_contain'].format(symbol=sym))
+
+        if await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_group]))):
+            return await message.reply(strings['group_name_collision'].format(name=note_group))
+    else:
+        note_group = None
+
+    note_names = [x.removeprefix('#') for x in arg.split('|')]
+    if sym := check_note_names(note_names):
+        return await message.reply(strings['notename_cant_contain'].format(symbol=sym))
+
+    # Notes limit
+    if await get_notes_count(chat_id) > MAX_NOTES_PER_CHAT:
+        return await message.reply(strings['saved_too_much'])
+    # Groups limit
+    if await get_groups_count(chat_id) > MAX_GROUPS_PER_CHAT:
+        return await message.reply(strings['saved_too_much'])
+
+    if await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.group.in_(note_names))):
+        return await message.reply(strings['note_name_collision'].format(name=note_group))
+
+    return note_names, note_group
+
+
+async def upsert_note(
+        chat_id: ChatId,
+        description: str,
+        note_names: List[str],
+        edited_user: ChatId,
+        note_data: BaseNote,
+        note_group: str
+) -> (BaseNote, str):
+    if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note_names))):
+        status = 'updated'
+        note.names = note_names
+        note.description = description
+        note.edited_date = datetime.now()
+        note.edited_user = edited_user
+        note.note = note_data
+        note.group = note_group
+    else:
+        status = 'saved'
+        note = SavedNote(
+            names=note_names,
+            description=description,
+            chat_id=chat_id,
+            created_date=datetime.now(),
+            created_user=edited_user,
+            note=note_data,
+            group=note_group
+        )
+
+    # await
+
+    return await engine.save(note), status
+
+
+def build_saved_text(
+        strings: dict,
+        chat_name: str,
+        description: str,
+        note_names: List[str],
+        note_data: BaseNote,
+        note_group: str
+) -> STFDoc:
+    # Build reply text
+    doc = STFDoc()
+    sec = Section(
+        # KeyValue(strings['status'], strings[status]),
+        KeyValue(strings['names'], HList(*note_names, prefix='#')),
+        KeyValue(strings['note_info_desc'], description),
+        KeyValue(strings['note_info_parsing'], Code(str(strings[note_data.parse_mode]))),
+        KeyValue(strings['note_info_preview'], note_data.preview),  # TODO: translateable
+        title=strings['saving_title'].format(chat_name=chat_name)
+    )
+
+    if note_group:
+        note_group = note_group
+        sec += KeyValue(strings['note_group'], f'#{note_group}')
+
+    doc += sec
+    doc += Section(strings['you_can_get_notes'], title=strings['getting_tip'])
+
+    return doc

@@ -27,6 +27,15 @@ STRINGS:
     note_group: "Group"
     saved_too_much: "<b>Warning!</b> You are trying to save notes/groups over a limit! Please ask in @SophieSupport."
 
+    # /savemedia
+    send_files: "Please send media files right now. Once it will be done press a button below."
+    send_files_1: "You can send up to 10 files."
+    done_button: "✅ Done"
+    send_files_2: "Type /cancel to exit the wizard."
+    bad_file_type: "The file type you send is incorrect, you can make a media group only with same type!"
+    bad_file_type_1: "Please upload the right one right now."
+    too_much_files: "You are trying to upload too much files (above 10)!"
+
     # /get
     cant_find_note: I can't find this note in <b>{chat_name}</b>!
     no_note: "Can't find that note."

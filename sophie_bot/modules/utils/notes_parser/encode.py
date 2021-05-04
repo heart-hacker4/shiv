@@ -52,7 +52,7 @@ def remove_msg_parse(text: str) -> str:
     return PARSE_MODE_PATTERN.sub('', text)
 
 
-async def get_msg_file(message: Message) -> Optional[dict]:
+def get_msg_file(message: Message) -> Optional[dict]:
     if message.content_type in FILE_TYPES_FUNCS:
         content_type = str(message.content_type)
         if type(file := message[content_type]) is list:
@@ -64,7 +64,12 @@ async def get_msg_file(message: Message) -> Optional[dict]:
     return None
 
 
-async def get_parsed_note_list(message: Message, allow_reply_message=True, split_args=1) -> BaseNote:
+async def get_parsed_note_list(
+        message: Message,
+        allow_reply_message=True,
+        split_args=1,
+        skip_files: bool = False
+) -> BaseNote:
     # Default values
     file = None
 
@@ -94,7 +99,7 @@ async def get_parsed_note_list(message: Message, allow_reply_message=True, split
             text += get_reply_msg_buttons_text(message.reply_to_message)
 
         # Check on attachment
-        if msg_file := await get_msg_file(message.reply_to_message):
+        if not skip_files and (msg_file := await get_msg_file(message.reply_to_message)):
             file = msg_file
 
     # Preview

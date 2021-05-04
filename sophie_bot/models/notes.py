@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Union
 
-from pydantic import BaseModel, validator
+from odmantic import EmbeddedModel
+from pydantic import validator
 
 
 class FileType(str, Enum):
@@ -15,8 +16,8 @@ class FileType(str, Enum):
     animation = 'animation'
 
 
-class NoteFile(BaseModel):
-    id: str
+class NoteFile(EmbeddedModel):
+    id: Union[str, List[str]]
     type: FileType
 
     @validator('id')
@@ -32,7 +33,7 @@ class ParseMode(str, Enum):
     html = 'html'
 
 
-class BaseNote(BaseModel):
+class BaseNote(EmbeddedModel):
     parse_mode: ParseMode
     file: Optional[NoteFile]
     text: Optional[str]
