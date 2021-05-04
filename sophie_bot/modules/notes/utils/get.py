@@ -24,8 +24,8 @@ from typing import List, Optional
 from odmantic import query
 
 from sophie_bot.models.notes import BaseNote
-from sophie_bot.modules.utils.notes import unparse_note_item, send_note
-from sophie_bot.modules.utils.text import Section, KeyValue, VList
+from sophie_bot.modules.utils.notes_parser.send_new import send_new_note
+from sophie_bot.modules.utils.text import Section, KeyValue, VList, HList
 from sophie_bot.services.mongo import db, engine
 from ..models import SavedNote
 
@@ -60,28 +60,19 @@ async def get_similar_note(chat_id, note_name):
 
 
 async def get_note(message, note: BaseNote,
-                   chat_id=None, send_id=None, rpl_id=None, noformat=False, event=None, user=None):
+                   chat_id=None, send_id=None, reply_to=None, noformat=False, event=None, user=None):
     if not chat_id:
         chat_id = message.chat.id
 
     if not send_id:
         send_id = message.chat.id
 
-    if rpl_id is False:
-        rpl_id = None
-    elif not rpl_id:
-        rpl_id = message.message_id
+    if reply_to is False:
+        reply_to = None
+    elif not reply_to:
+        reply_to = message.message_id
 
-    text, kwargs = await unparse_note_item(message, note, chat_id, raw=noformat, event=event, user=user)
-    kwargs['reply_to'] = rpl_id
-
-    # Send text in different message for stickers
-    if note.file and note.file.type == 'sticker':
-        media_separate = True
-    else:
-        media_separate = False
-
-    return await send_note(send_id, text, media_separate=media_separate, **kwargs)
+    return await send_new_note(send_id, note, reply_to=reply_to)
 
 
 async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
@@ -113,18 +104,17 @@ async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hi
             if name_filter and not any([name_filter in x.lower() for x in note.names]):
                 continue
 
-            item_text = '#' + ' #'.join(note.names)
-            if note.description:
-                notes_list.append(KeyValue(item_text, note.description, title_bold=False))
-            else:
-                notes_list.append(item_text)
+            item_text = HList(*note.names, prefix='#')
+            notes_list.append(
+                KeyValue(item_text, note.description, title_bold=False) if note.description else item_text
+            )
+
         if notes_list:
             notes_section.append(Section(VList(*notes_list), title=f'#{group or "nogroup"}', title_underline=False))
 
         # Remove groups section if there is only 'nogroup' and purify_groups is on
         if purify_groups and len(groups) == 1 and not groups[0]:
             # The first element is 'nogroup' secion
-            del notes_section[0]
-            notes_section.extend(notes_list)
+            pass
 
     return notes_section

@@ -3,15 +3,15 @@ from datetime import datetime
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 from sophie_bot.decorator import register
-from sophie_bot.modules.utils.text import SanTeXDoc, Section, KeyValue, HList, Code
+from sophie_bot.modules.utils.connections import chat_connection
+from sophie_bot.modules.utils.language import get_strings_dec
+from sophie_bot.modules.utils.message import get_arg, need_args_dec, get_args
+from sophie_bot.modules.utils.notes_parser.encode import get_parsed_note_list
+from sophie_bot.modules.utils.text import STFDoc, Section, KeyValue, HList, Code
 from sophie_bot.services.mongo import db, engine
 from ..models import SavedNote, MAX_NOTES_PER_CHAT, MAX_GROUPS_PER_CHAT
 from ..utils.get import get_similar_note
-from ..utils.saving import check_note_names, check_note_group, get_notes_count, get_groups_count
-from ...utils.connections import chat_connection
-from ...utils.language import get_strings_dec
-from ...utils.message import get_arg, need_args_dec, get_args
-from ...utils.notes import get_parsed_note_list, DESC_REGEXP
+from ..utils.saving import check_note_names, check_note_group, get_notes_count, get_groups_count, get_note_description
 
 
 @register(cmds=['save', 'setnote', 'savenote'], user_admin=True)
@@ -55,10 +55,7 @@ async def save_note(message, chat, strings):
         return
 
     # Note description
-    if desc := DESC_REGEXP.search(message.text):
-        desc = desc.group(1) or None
-    else:
-        desc = None
+    desc, note_data.text = get_note_description(note_data.text)
 
     if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note_names))):
         # status = 'updated'
@@ -83,7 +80,7 @@ async def save_note(message, chat, strings):
     await engine.save(note)
 
     # Build reply text
-    doc = SanTeXDoc()
+    doc = STFDoc()
     sec = Section(
         # KeyValue(strings['status'], strings[status]),
         KeyValue(strings['names'], HList(*note_names, prefix='#')),
@@ -96,8 +93,6 @@ async def save_note(message, chat, strings):
     if note_group:
         note_group = note_group
         sec += KeyValue(strings['note_group'], f'#{note_group}')
-
-    print(message)
 
     doc += sec
     doc += Section(strings['you_can_get_notes'], title=strings['getting_tip'])

@@ -26,10 +26,12 @@ from sophie_bot.services.mongo import db
 from .utils.connections import chat_connection
 from .utils.disable import disableable_dec
 from .utils.language import get_strings_dec
-from .utils.notes import (
-    BUTTONS, get_parsed_note_list,
-    send_note, unparse_note_item
-)
+
+
+# from .utils.notes import (
+#    BUTTONS, get_parsed_note_list,
+#    send_note, unparse_note_item
+# )
 
 
 @register(cmds=['setrules', 'saverules'], user_admin=True)
@@ -92,7 +94,7 @@ async def reset_rules(message, chat, strings):
     await message.reply(strings['deleted'])
 
 
-BUTTONS.update({'rules': 'btn_rules'})
+# BUTTONS.update({'rules': 'btn_rules'})
 
 
 @register(CommandStart(re.compile('btn_rules')))

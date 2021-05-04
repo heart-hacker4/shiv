@@ -1,7 +1,10 @@
+import re
 from typing import List, Optional
 
 from sophie_bot.services.mongo import engine, db
 from ..models import RESTRICTED_SYMBOLS, SavedNote
+
+REGEXP_NOTE_DESCRIPTION = re.compile(r'^("([^"]*)")')
 
 
 def check_note_names(note_names: List[str]) -> Optional[str]:
@@ -18,6 +21,13 @@ def check_note_group(note_group: str) -> Optional[str]:
         return sym
 
     return None
+
+
+def get_note_description(text: str):
+    if not (result := REGEXP_NOTE_DESCRIPTION.search(text)):
+        return None, text
+
+    return result.group(2), text.removeprefix(result.group(1))
 
 
 async def get_notes_count(chat_id: int) -> int:

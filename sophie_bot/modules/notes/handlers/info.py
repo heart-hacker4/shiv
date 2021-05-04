@@ -28,7 +28,7 @@ from sophie_bot.modules.utils.connections import chat_connection, set_connected_
 from sophie_bot.modules.utils.disable import disableable_dec
 from sophie_bot.modules.utils.language import get_strings_dec
 from sophie_bot.modules.utils.message import get_arg, need_args_dec
-from sophie_bot.modules.utils.text import SanTeXDoc, Section, KeyValue, Code, Italic, HList
+from sophie_bot.modules.utils.text import STFDoc, Section, KeyValue, Code, Italic, HList
 from sophie_bot.modules.utils.user_details import get_user_link
 from sophie_bot.services.mongo import db, engine
 from ..models import SavedNote
@@ -52,7 +52,7 @@ async def get_group_hashtag(message, chat, strings, regexp=None):
         return
 
     notes = await get_notes_sections(await get_notes(chat_id), group_filter=[group_name])
-    doc = SanTeXDoc(Section(
+    doc = STFDoc(Section(
         KeyValue(strings['group_notes_header'], Code(group_name or 'nogroup')),
         *notes,
         title=strings['notelist_header'].format(chat_name=chat['chat_title'])
@@ -75,7 +75,7 @@ async def get_notes_list_cmd(message, chat, strings):
     else:
         show_hidden = False
 
-    doc = SanTeXDoc()
+    doc = STFDoc()
     sections = [KeyValue(strings['search_pattern'], Code(arg))] if arg else []
 
     if not (notes_section := await get_notes_sections(
@@ -90,6 +90,7 @@ async def get_notes_list_cmd(message, chat, strings):
 
 
 @register(cmds='search')
+@disableable_dec('search')
 @chat_connection()
 @get_strings_dec('notes')
 @clean_notes
@@ -103,7 +104,7 @@ async def search_in_note(message, chat, strings):
     if not notes or not (notes_section := await get_notes_sections(notes)):
         return await message.reply(strings["query_not_found"].format(chat_name=chat['chat_title']))
 
-    return await message.reply(str(SanTeXDoc(
+    return await message.reply(str(STFDoc(
         Section(
             KeyValue(strings['search_pattern'], Code(pattern)),
             *notes_section,
@@ -140,7 +141,14 @@ async def note_info(message, chat, strings):
 
     sec = Section(title=strings['note_info_title'])
     sec += KeyValue(strings['note_info_note'], HList(*note.names, prefix='#'))
-    sec += KeyValue(strings['note_info_content'], strings[('text' if 'file' not in note else note['file']['type'])])
+
+    content = []
+    if note.note.file:
+        content.append(note.note.file.type)
+    if note.note.text:
+        content.append('text')
+
+    sec += KeyValue(strings['note_info_content'], ' + '.join(map(lambda c: strings[c], content)))
     sec += KeyValue(strings['note_info_parsing'], Code(strings[note.note.parse_mode]))
     sec += KeyValue(strings['note_info_group'], f"#{note.group or 'nogroup'}")
 
@@ -163,4 +171,4 @@ async def note_info(message, chat, strings):
             title=strings['note_info_updated']
         )
 
-    return await message.reply(str(SanTeXDoc(sec)))
+    return await message.reply(str(STFDoc(sec)))

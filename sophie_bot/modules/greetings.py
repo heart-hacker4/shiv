@@ -47,7 +47,7 @@ from sophie_bot.stuff.fonts import ALL_FONTS
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 from .utils.message import need_args_dec, convert_time
-from .utils.notes import get_parsed_note_list, unparse_note_item, send_note
+# from .utils.notes import get_parsed_note_list, unparse_note_item, send_note
 from .utils.restrictions import mute_user, restrict_user, unmute_user, kick_user
 from .utils.user_details import is_user_admin, get_user_link, check_admin_rights
 from ..utils.cached import cached

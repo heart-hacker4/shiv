@@ -92,16 +92,12 @@ async def get_id_by_nick(data):
 
 
 async def get_user_by_username(username):
-    # Search username in database
-    if '@' in username:
-        # Remove '@'
-        username = username[1:]
+    username = username.removeprefix('@')
 
     user = await db.user_list.find_one(
         {'username': username.lower()}
     )
 
-    # Ohnu, we don't have this user in DB
     if not user:
         try:
             user = await add_user_to_db(await tbot(GetFullUserRequest(username)))

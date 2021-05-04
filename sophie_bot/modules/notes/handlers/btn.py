@@ -25,7 +25,7 @@ from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.utils.exceptions import MessageCantBeDeleted
 
 from sophie_bot.decorator import register
-from sophie_bot.modules.utils.notes import BUTTONS
+from sophie_bot.modules.utils.notes_parser.buttons import BUTTONS
 from sophie_bot.services.mongo import engine
 from sophie_bot.services.redis import redis
 from ..models import SavedNote
@@ -49,7 +49,7 @@ async def note_btn(event, strings, regexp=None, **kwargs):
 
     with suppress(MessageCantBeDeleted):
         await event.message.delete()
-    await get_note(event.message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None, event=event)
+    await get_note(event.message, note.note, chat_id=chat_id, send_id=user_id, reply_to=None, event=event)
 
 
 @register(CommandStart(re.compile(r'btnnotesm')), allow_kwargs=True)
@@ -66,7 +66,7 @@ async def note_start(message, strings, regexp=None, **kwargs):
         await message.reply(strings['no_note'])
         return
 
-    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None)
+    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, reply_to=None)
 
 
 @register(cmds='start', only_pm=True)
@@ -81,6 +81,6 @@ async def btn_note_start_state(message, strings):
     note_name = cached['notename']
 
     note = await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))
-    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, rpl_id=None)
+    await get_note(message, note.note, chat_id=chat_id, send_id=user_id, reply_to=None)
 
     redis.delete(key)

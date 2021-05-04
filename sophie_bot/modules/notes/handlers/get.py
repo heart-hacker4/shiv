@@ -78,7 +78,7 @@ async def get_note_cmd(message, chat, strings):
     note_data = await get_note(
         message,
         note.note,
-        rpl_id=rpl_id,
+        reply_to=rpl_id,
         noformat=noformat,
         user=user
     )
@@ -117,7 +117,7 @@ async def get_note_hashtag(message, chat, regexp=None):
     note_data = await get_note(
         message,
         note.note,
-        rpl_id=rpl_id,
+        reply_to=rpl_id,
         user=user
     )
 

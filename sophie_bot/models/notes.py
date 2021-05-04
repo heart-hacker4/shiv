@@ -1,6 +1,6 @@
+from enum import Enum
 from typing import Optional
 
-from enum import Enum
 from pydantic import BaseModel, validator
 
 
@@ -12,6 +12,7 @@ class FileType(str, Enum):
     audio = 'audio'
     video_note = 'video_note'
     voice = 'voice'
+    animation = 'animation'
 
 
 class NoteFile(BaseModel):
@@ -36,9 +37,16 @@ class BaseNote(BaseModel):
     file: Optional[NoteFile]
     text: Optional[str]
     preview: bool
+    old: bool = False
 
     @validator('text')
     def text_length(cls, v):
         if len(v) > 6144:
             raise ValueError('Text should be shorter than 6144 symbols!')
+        return v
+
+    @validator('old')
+    def old_markdown(cls, v, values):
+        if not v and values['parse_mode'] == ParseMode.md:
+            raise ValueError("New notes can't have a Markdown parse_mode!")
         return v

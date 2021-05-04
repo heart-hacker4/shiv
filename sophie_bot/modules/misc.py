@@ -23,7 +23,7 @@ from aiogram.utils.exceptions import BadRequest, MessageNotModified, MessageToDe
 
 from sophie_bot.decorator import register
 from .utils.language import get_strings_dec
-from .utils.notes import get_parsed_note_list, send_note, unparse_note_item
+# from .utils.notes import get_parsed_note_list, send_note, unparse_note_item
 from .utils.user_details import is_user_admin
 
 

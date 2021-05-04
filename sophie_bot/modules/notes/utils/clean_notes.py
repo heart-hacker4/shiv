@@ -17,7 +17,7 @@ def clean_notes(func):
         if not (messages := await func(*args, **kwargs)):
             return
         if type(messages) != list:
-            messages = [messages]
+            messages = list(messages)
 
         if event.chat.type == 'private':
             return

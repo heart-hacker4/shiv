@@ -81,6 +81,7 @@ STRINGS:
     audio: "Audio"
     video_note: "Video note"
     voice: "Voice"
+    animation: "GIF"
 
     # /privatenotes
     already_enabled: "Private notes are already enabled in <b>{chat_name}</b>"

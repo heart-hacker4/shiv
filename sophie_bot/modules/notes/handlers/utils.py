@@ -85,7 +85,7 @@ async def filter_handle(message, chat, data):
     read_chat_id = message.chat.id
     note_name = data['note_name']
     note = await db.notes.find_one({'chat_id': chat_id, 'names': {'$in': [note_name]}})
-    await get_note(message, db_item=note, chat_id=chat_id, send_id=read_chat_id, rpl_id=None)
+    await get_note(message, db_item=note, chat_id=chat_id, send_id=read_chat_id, reply_to=None)
 
 
 async def setup_start(message):

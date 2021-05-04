@@ -32,7 +32,7 @@ from sophie_bot.services.telethon import tbot
 from .utils.covert import convert_size
 from .utils.language import get_strings_dec
 from .utils.message import need_args_dec
-from .utils.notes import BUTTONS, get_parsed_note_list, unparse_note_item, send_note
+# from .utils.notes import BUTTONS, get_parsed_note_list, unparse_note_item, send_note
 from .utils.term import chat_term
 
 

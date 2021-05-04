@@ -17,11 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import orjson
 import asyncio
 import io
 from datetime import datetime, timedelta
-from odmantic.engine import ModelType
 
 import ujson
 from aiogram import types
@@ -31,19 +29,15 @@ from babel.dates import format_timedelta
 from odmantic.engine import ModelType
 from pydantic.error_wrappers import ValidationError
 
-
 from sophie_bot import OPERATORS, bot, SOPHIE_VERSION, BOT_ID
 from sophie_bot.decorator import register
 from sophie_bot.models.imports_exports import ExportModel, GeneralData, ExportInfo
 from sophie_bot.modules.utils.message import get_arg
-from sophie_bot.modules.utils.text import SanTeXDoc, Section, Code, KeyValue, VList
+from sophie_bot.modules.utils.text import STFDoc, Section, Code, KeyValue, VList
 from sophie_bot.services.redis import redis
 from . import LOADED_MODULES
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
-from sophie_bot.models.imports_exports import ExportModel, GeneralData, ExportInfo
-from sophie_bot.modules.utils.text import SanTeXDoc, Section, Bold, Code, KeyValue, VList
-from sophie_bot.modules.utils.message import get_arg
 
 VERSION = 6
 
@@ -180,7 +174,7 @@ async def import_fun(message, document, chat, strings):
                 error_location = ('modules', module_name) + error['loc']
                 error_list.append(KeyValue(' -> '.join(str(e) for e in error_location), Code(error['msg'])))
 
-            return await message.reply(str(SanTeXDoc(Section(
+            return await message.reply(str(STFDoc(Section(
                 KeyValue(strings['module_name'], module_name),
                 Section(VList(*error_list), title=strings['error_msg']),
                 title=strings['import_error_header']

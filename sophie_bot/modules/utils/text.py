@@ -19,7 +19,7 @@
 from typing import Any
 
 
-class SanTeXDoc:
+class STFDoc:
     def __init__(self, *args):
         self.items = list(args)
 
@@ -129,7 +129,6 @@ class VList:
         self.indent = indent
 
     def __str__(self) -> str:
-        print(self.indent)
         space = ' ' * self.indent if self.indent else ' '
         text = ''
         for idx, item in enumerate(self.items):
