@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from functools import wraps
 
 import yaml
 from babel.core import Locale
@@ -104,6 +105,7 @@ async def get_string(chat_id, module, name, mas_name="STRINGS"):
 
 def get_strings_dec(module, mas_name="STRINGS"):
     def wrapped(func):
+        @wraps(func)
         async def wrapped_1(*args, **kwargs):
             message = args[0]
             if hasattr(message, 'chat'):

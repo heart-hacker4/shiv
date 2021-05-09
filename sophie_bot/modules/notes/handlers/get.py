@@ -68,10 +68,10 @@ async def get_note_cmd(message, chat, strings):
     if note.group == 'admin' and not await is_user_admin(chat_id, user.id):
         return
 
-    noformat = False
+    raw = False
     if len(args := message.text.split(' ')) > 2:
         arg2 = args[2].lower()
-        noformat = arg2 in ('noformat', 'raw')
+        raw = arg2 in ('noformat', 'raw')
         if not keep:
             keep = arg2 in ('keep', 'sway')
 
@@ -79,7 +79,7 @@ async def get_note_cmd(message, chat, strings):
         message,
         note.note,
         reply_to=rpl_id,
-        noformat=noformat,
+        raw=raw,
         user=user
     )
 

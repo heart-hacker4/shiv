@@ -25,14 +25,18 @@ from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.utils.exceptions import MessageCantBeDeleted
 
 from sophie_bot.decorator import register
-from sophie_bot.modules.utils.notes_parser.buttons import BUTTONS
+from sophie_bot.modules.utils.notes_parser.buttons import BUTTONS, DefinedButtonOptions, DefinedButtonType
 from sophie_bot.services.mongo import engine
 from sophie_bot.services.redis import redis
 from ..models import SavedNote
 from ..utils.get import get_note
 from ...utils.language import get_strings_dec
 
-BUTTONS.update({'note': 'btnnotesm', '#': 'btnnotesm'})
+BTN_PREFIX = 'note_btn'
+BUTTONS.update({
+    'note': DefinedButtonOptions(BTN_PREFIX, DefinedButtonType.smart, False),
+    '#': DefinedButtonOptions(BTN_PREFIX, DefinedButtonType.smart, False)
+})
 
 
 @register(regexp=r'btnnotesm_(\w+)_(.*)', f='cb', allow_kwargs=True)

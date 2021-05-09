@@ -44,7 +44,7 @@ for module_name in ALL_FILTERS:
 log.info("Filters loaded!")
 
 
-def register(*args, cmds=None, f=None, allow_edited=True, allow_kwargs=False, **kwargs):
+def register(*args, cmds=None, f=None, allow_edited=True, only_edited=False, allow_kwargs=False, **kwargs):
     if cmds and type(cmds) == str:
         cmds = [cmds]
 
@@ -125,8 +125,9 @@ def register(*args, cmds=None, f=None, allow_edited=True, allow_kwargs=False, **
         if f == 'cb':
             dp.register_callback_query_handler(new_func, *args, **register_kwargs)
         else:
-            dp.register_message_handler(new_func, *args, **register_kwargs)
-            if allow_edited is True:
+            if not only_edited:
+                dp.register_message_handler(new_func, *args, **register_kwargs)
+            if allow_edited or only_edited:
                 dp.register_edited_message_handler(new_func, *args, **register_kwargs)
 
     return decorator

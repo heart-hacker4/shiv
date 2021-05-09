@@ -1,4 +1,4 @@
-from aiogram.utils.text_decorations import TextDecoration
+from aiogram.utils.text_decorations import TextDecoration, HtmlDecoration
 
 
 class SDecoration(TextDecoration):
@@ -25,3 +25,8 @@ class SDecoration(TextDecoration):
 
     def strikethrough(self, value: str) -> str:
         return f'~~{value}~~'
+
+
+class HtmlDecorationWithoutEscaping(HtmlDecoration):
+    def quote(self, value: str) -> str:
+        return value

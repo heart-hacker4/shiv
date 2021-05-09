@@ -4,8 +4,12 @@ from typing import List, Optional, Union, Tuple
 
 from aiogram.types import Message
 
-from sophie_bot.models.notes import BaseNote
+from sophie_bot.models.notes import BaseNote, ParseMode
 from sophie_bot.modules.utils.message import get_arg
+from sophie_bot.modules.utils.notes_parser.buttons import (
+    WrongButtonAction, ButtonShouldHaveArgument, TooMuchButtonsInRow
+)
+from sophie_bot.modules.utils.notes_parser.encode import get_parsed_note_list
 from sophie_bot.modules.utils.text import STFDoc, HList, KeyValue, Section, Code
 from sophie_bot.services.mongo import engine, db
 from sophie_bot.types.chat import ChatId
@@ -46,13 +50,39 @@ async def get_groups_count(chat_id: int) -> int:
     return len(await db[+SavedNote].distinct('group', SavedNote.chat_id == chat_id))
 
 
-async def get_names_group(strings: dict, message: Message, chat_id: ChatId) -> Union[Message, Tuple[List[str], str]]:
+async def save_and_check(message, strings) -> Union[Message, BaseNote]:
+    try:
+        note_data = await get_parsed_note_list(message)
+        if not note_data.text and not note_data.files:
+            return await message.reply(strings['blank_note'])
+    except WrongButtonAction as err:
+        msg = strings['error_saving']
+        msg += '\n'
+        msg += strings['buttons_wrong_action'].format(button_name=err.button_name, action=err.action)
+        return await message.reply(msg)
+    except ButtonShouldHaveArgument as err:
+        msg = strings['error_saving']
+        msg += '\n'
+        msg += strings['buttons_should_have_arg'].format(button_name=err.button_name, action=err.action)
+        return await message.reply(msg)
+    except TooMuchButtonsInRow:
+        msg = strings['error_saving']
+        msg += '\n'
+        msg += strings['too_long_row']
+        return await message.reply(msg)
+
+    return note_data
+
+
+async def get_names_group(
+        strings: dict, message: Message, chat_id: ChatId, arg: str = None
+) -> Union[Message, Tuple[List[str], str]]:
     # Get note names
-    arg = get_arg(message).lower()
+    arg = arg or get_arg(message).lower()
 
     # Get note group
-    if '^' in arg:
-        arg = arg.replace((raw := arg.split('^', 1))[1], '')[:-1]
+    if '@' in arg:
+        arg = arg.replace((raw := arg.split('@', 1))[1], '')[:-1]
         if sym := check_note_group(note_group := raw[1]):
             return await message.reply(strings['group_cant_contain'].format(symbol=sym))
 
@@ -116,7 +146,7 @@ def build_saved_text(
         chat_name: str,
         description: str,
         note_names: List[str],
-        note_data: BaseNote,
+        note: BaseNote,
         note_group: str
 ) -> STFDoc:
     # Build reply text
@@ -125,10 +155,13 @@ def build_saved_text(
         # KeyValue(strings['status'], strings[status]),
         KeyValue(strings['names'], HList(*note_names, prefix='#')),
         KeyValue(strings['note_info_desc'], description),
-        KeyValue(strings['note_info_parsing'], Code(str(strings[note_data.parse_mode]))),
-        KeyValue(strings['note_info_preview'], note_data.preview),  # TODO: translateable
+        KeyValue(strings['note_info_preview'], note.preview),  # TODO: translateable
         title=strings['saving_title'].format(chat_name=chat_name)
     )
+    # if len(files_count := note.files) > 1:
+    #    sec += KeyValue(strings['note_info_multiple_group'], files_count)
+    if note.parse_mode is not ParseMode.preformatted:
+        sec += KeyValue(strings['note_info_parsing'], Code(str(strings[note.parse_mode])))
 
     if note_group:
         note_group = note_group

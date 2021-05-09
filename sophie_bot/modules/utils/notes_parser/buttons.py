@@ -1,123 +1,256 @@
 import re
-from typing import Optional, List, Dict, Tuple
+from enum import Enum, auto
+from typing import Optional, List, Match, AnyStr, NamedTuple
 
 from aiogram.types import Message
-from telethon.tl.custom import Button
+from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from odmantic import EmbeddedModel
+from telethon.tl.custom import Button as TButton
 
 from sophie_bot import BOT_USERNAME
 from sophie_bot.types.chat import ChatId
+from .text import random_parser
 
-BUTTONS: Dict[str, str] = {}
 START_URL = f'https://t.me/{BOT_USERNAME}?start='
-BUTTONS_REGEXP = re.compile(r'\[(.+?)]\((button|btn)?(.+?)(:.+?|)(:same|)\)(\n|)')
+BUTTONS_TEXT_REGEXP = re.compile(
+    # [Button name](type:argument:same)
+    r'\[(.+?)]\((?:button|btn)?(?!http(?:s))(\w+|#)(?:(?:[:=])?(?:\s)?(?://)?(.*?)|)[:=]?(?:(?:\s)?(same|\^))?\)(?:\n)?'
+)
+BUTTON_CALLBACK_PATTERN = "{prefix}:{action}:{argument}:{chat_id}"
+BUTTONS_CALLBACK_REGEXP = re.compile(
+    r'.*:(.*):(.*):.*'
+)
 
 
-def parse_button(data, name: str) -> str:
-    raw_button = data.split('_')
-    raw_btn_type = raw_button[0]
-
-    pattern = re.match(r'btn(.+)(sm|cb|start)', raw_btn_type)
-    if not pattern:
-        return ''
-
-    action = pattern.group(1)
-    args = raw_button[1]
-
-    if action in BUTTONS:
-        text = f"\n[{name}]({action}:{args}*!repl!*)"
-    else:
-        if args:
-            text = f'\n[{name}]!({action}:{args})'
-        else:
-            text = f'\n[{name}]!({action})'
-
-    return text
+class DefinedButtonType(Enum):
+    smart = auto()
+    callback = auto()
+    start = auto()
+    url = auto()
 
 
-def get_reply_msg_buttons_text(message: Message) -> str:
-    text = ''
-    for column in message.reply_markup.inline_keyboard:
-        btn_num = 0
-        for btn in column:
-            btn_num += 1
-            name = btn['text']
+class RealButtonTypes(Enum):
+    url = auto()
+    callback = auto()
 
-            if 'url' in btn:
-                url = btn['url']
-                if '?start=' in url:
-                    raw_btn = url.split('?start=')[1]
-                    text += parse_button(raw_btn, name)
+
+class DBButton(EmbeddedModel):
+    name: str
+    action: str
+    argument: str
+
+
+class DefinedButtonOptions(NamedTuple):
+    cb_prefix: str
+    type: DefinedButtonType
+    argument_optional: bool
+
+
+BUTTONS = {
+    'url': DefinedButtonOptions('', type=DefinedButtonType.url, argument_optional=False)
+}
+
+
+class ButtonException(Exception):
+    pass
+
+
+class WrongButtonAction(ButtonException):
+    def __init__(self, button_name, action):
+        self.button_name = button_name
+        self.action = action
+
+
+class ButtonShouldHaveArgument(ButtonException):
+    def __init__(self, button_name, action):
+        self.button_name = button_name
+        self.action = action
+
+
+class TooMuchButtonsInRow(ButtonException):
+    pass
+
+
+BUTTONS_EXCEPTIONS = (
+    WrongButtonAction,
+    ButtonShouldHaveArgument,
+    TooMuchButtonsInRow
+)
+
+
+class ButtonFabric(List[List[DBButton]]):
+    """Represents a inline buttons of a message. Can be stored in the database.
+    Contains a functions to parse and unparse buttons."""
+
+    @staticmethod
+    def test_button_before_saving(button_name: str, action, argument):
+        """Raises a exception if button has a problem."""
+        if action not in BUTTONS:
+            raise WrongButtonAction(button_name=button_name, action=action)
+
+        defined_button_options: DefinedButtonOptions = BUTTONS[action]
+        if not defined_button_options.argument_optional and not argument:
+            raise ButtonShouldHaveArgument(button_name=button_name, action=action)
+
+    def parse_text(self, text: str) -> str:
+        """Parses a text into buttons. Returns a text without buttons."""
+        raw_buttons: List[Match[AnyStr]] = BUTTONS_TEXT_REGEXP.findall(text)
+        for raw_button in raw_buttons:
+            button_name: str = raw_button[0]
+            action: str = raw_button[1]
+            argument: str = raw_button[2]
+            same_row: bool = bool(raw_button[3])
+
+            self.test_button_before_saving(button_name, action, argument)
+            self.add_button(button_name, action, argument, same_row=same_row)
+
+        return BUTTONS_TEXT_REGEXP.sub('', text)
+
+    def parse_message(self, message: Message) -> bool:
+        """Parses a message with buttons. Returns if buttons are found"""
+        if not message.reply_markup or not message.reply_markup.inline_keyboard:
+            # There is no inline buttons in message
+            return False
+
+        for row in message.reply_markup.inline_keyboard:
+            for idx, button in enumerate(row):
+                button_name: str = button['text']
+                same_row: bool = idx > 0
+
+                if button.callback_data or button.url and button.url.startswith(START_URL):
+                    string: str = button['url'].split(START_URL)[1] if 'url' in button else button['callback_data']
+
+                    if not (data := BUTTONS_CALLBACK_REGEXP.search(string)):
+                        # A button from older SophieBot syntax or other bots, let's skip it.
+                        continue
+
+                    data: Match[AnyStr]
+                    action = data[1]
+                    argument = data[2]
+                elif button.url:
+                    # A simple url button
+                    action = 'url'
+                    argument = button['url']
                 else:
-                    text += f"\n[{btn['text']}](btnurl:{btn['url']}*!repl!*)"
-            elif 'callback_data' in btn:
-                text += parse_button(btn['callback_data'], name)
+                    # A wrong button type, let's skip it
+                    continue
 
-            if btn_num > 1:
-                text = text.replace('*!repl!*', ':same')
-            else:
-                text = text.replace('*!repl!*', '')
-    return text
+                self.test_button_before_saving(button_name, action, argument)
+                self.add_button(button_name, action, argument, same_row=same_row)
 
+        return True
 
-def button_parser(chat_id: ChatId, texts: str, pm=False) -> Tuple[str, Optional[List[Button]]]:
-    # buttons = InlineKeyboardMarkup(row_width=row_width)
-    buttons: List[Button] = []
-    raw_buttons = BUTTONS_REGEXP.findall(texts)
-    text = BUTTONS_REGEXP.sub('', texts)
+    def add_button(
+            self,
+            button_name: str,
+            action: str,
+            argument: Optional[str],
+            same_row: bool = False
+    ):
+        # Name url https://google.com
+        # Name smart test_cb
+        button = DBButton(name=button_name, action=action, argument=argument)
 
-    btn = None
-    for raw_button in raw_buttons:
-        name = raw_button[0]
-        action = raw_button[2]
-
-        if raw_button[3]:
-            argument = raw_button[3][1:].lower().replace('`', '')
-        elif action == '#':
-            argument = raw_button[2]
+        if not same_row or len(self) < 1:
+            self.append([button])
         else:
-            argument = ''
+            self[-1].append(button)
 
-        if action in BUTTONS.keys():
-            cb = BUTTONS[action]
-            string = f'{cb}_{argument}_{chat_id}' if argument else f'{cb}_{chat_id}'
-            # start_btn = InlineKeyboardButton(name, url=START_URL + string)
-            # cb_btn = InlineKeyboardButton(name, callback_data=string)
-            start_btn = Button.url(name, START_URL + string)
-            cb_btn = Button.inline(name, string)
+    @staticmethod
+    def get_smart_button(button: DBButton, argument: Optional[str] = None):
+        url: str = START_URL + argument or button['argument']
+        return button['name'], RealButtonTypes.url, url
 
-            if cb.endswith('sm'):
-                btn = cb_btn if pm else start_btn
-            elif cb.endswith('cb'):
-                btn = cb_btn
-            elif cb.endswith('start'):
-                btn = start_btn
-            elif cb.startswith('url'):
-                # Workaround to make URLs case-sensitive TODO: make better
-                argument = raw_button[3][1:].replace('`', '') if raw_button[3] else ''
-                btn = Button.url(name, argument)
-            elif cb.endswith('rules'):
-                btn = start_btn
-        elif action == 'url':
-            argument = raw_button[3][1:].replace('`', '') if raw_button[3] else ''
-            if argument[0] == '/' and argument[1] == '/':
-                argument = argument[2:]
-            # btn = InlineKeyboardButton(name, url=argument)
-            btn = Button.url(name, argument)
-        else:
-            # If btn not registred
-            btn = None
-            if argument:
-                text += f'\n[{name}].(btn{action}:{argument})'
+    @staticmethod
+    def get_callback_button(button: DBButton, argument: Optional[str] = None):
+        return button['name'], RealButtonTypes.callback, argument or button['argument']
+
+    def get_callback(self, button: DBButton, options: DefinedButtonOptions, chat_id: ChatId):
+        return BUTTON_CALLBACK_PATTERN.format(
+            prefix=options.cb_prefix,
+            action=button.action,
+            argument=button.argument,
+            chat_id=chat_id
+        )
+
+    def unparse_button(self, button: DBButton, is_pm: bool, chat_id: ChatId) -> (str, RealButtonTypes, str):
+        options = BUTTONS[button.action]
+        callback_data = self.get_callback(button, options, chat_id)
+
+        if options.type is DefinedButtonType.url:
+            return button.name, RealButtonTypes.url, button.argument
+
+        elif options.type is DefinedButtonType.callback:
+            return self.get_callback_button(button)
+
+        # Here is buttons a little more complicated
+        elif options.type is DefinedButtonType.start:
+            return self.get_smart_button(button, argument=callback_data)
+
+        elif options.type is DefinedButtonType.smart:
+            if is_pm:
+                return self.get_callback_button(button, argument=callback_data)
             else:
-                text += f'\n[{name}].(btn{action})'
-                continue
+                return self.get_smart_button(button, argument=callback_data)
 
-        if btn:
-            # buttons.insert(btn) if raw_button[4] else buttons.add(btn)
-            if len(buttons) < 1 and raw_button[4]:
-                # buttons.add(btn)
-                buttons.append([btn])
-            else:
-                buttons[-1].append(btn) if raw_button[4] else buttons.append([btn])
+    def unparse_to_text(self) -> str:
+        """Unparses buttons to text. Uses the most modern buttons syntax."""
+        result = ''
 
-    return text, buttons or None  # None not needed for aiogram
+        for row in self:
+            for idx, button in enumerate(row):
+                text = f"[{button['name']}]({button['action']}"
+                if button['argument']:
+                    text += f":{button['argument']}"
+                if idx != 0:
+                    # Same row
+                    text += ':^'
+                text += ')\n'
+                result += text
+
+        return result
+
+    @staticmethod
+    def apply_random_name(button_name: str) -> str:
+        return random_parser(button_name)
+
+    def aiogram(self, chat_id: ChatId, is_pm: bool = False) -> InlineKeyboardMarkup:
+        """Unparses buttons for aiorgam send_message function"""
+        markup = InlineKeyboardMarkup()
+
+        for row in self:
+            for idx, button in enumerate(row):
+                button_name, button_type, argument = self.unparse_button(button, is_pm, chat_id)
+
+                kwargs = {}
+                if button_type is RealButtonTypes.url:
+                    kwargs['url'] = argument
+                elif button_type is RealButtonTypes.callback:
+                    kwargs['callback_data'] = argument
+
+                button = InlineKeyboardButton(self.apply_random_name(button_name), **kwargs)
+
+                if idx > 0:
+                    markup.insert(button)
+                else:
+                    markup.add(button)
+
+        return markup
+
+    def telethon(self, chat_id: ChatId, is_pm: bool = False) -> List[List[TButton]]:
+        rows = []
+        for row in self:
+            for idx, button in enumerate(row):
+                button_name, button_type, argument = self.unparse_button(button, is_pm, chat_id)
+
+                if button_type is RealButtonTypes.url:
+                    button = TButton.url(button_name, argument)
+                elif button_type is RealButtonTypes.callback:
+                    button = TButton.inline(button_name, argument)
+
+                if not idx > 0 or len(self) < 1:
+                    rows.append([button])
+                else:
+                    rows[-1].append(button)
+
+        return rows

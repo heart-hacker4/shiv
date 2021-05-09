@@ -141,16 +141,25 @@ async def note_info(message, chat, strings):
 
     sec = Section(title=strings['note_info_title'])
     sec += KeyValue(strings['note_info_note'], HList(*note.names, prefix='#'))
+    sec += KeyValue(strings['note_info_id'], Code(str(note.id)))
 
     content = []
-    if note.note.file:
-        content.append(note.note.file.type)
     if note.note.text:
-        content.append('text')
+        content.append(strings['text'])
+    if note.note.buttons:
+        content.append(strings['buttons'])
+    if note.note.files:
+        if len(note.note.files) > 1:
+            content.append(strings['mediagroup'].format(content=strings[note.note.files[0].type]))
+        else:
+            content.append(strings[note.note.files[0].type])
 
-    sec += KeyValue(strings['note_info_content'], ' + '.join(map(lambda c: strings[c], content)))
+    sec += KeyValue(strings['note_info_content'], ' + '.join(content))
     sec += KeyValue(strings['note_info_parsing'], Code(strings[note.note.parse_mode]))
     sec += KeyValue(strings['note_info_group'], f"#{note.group or 'nogroup'}")
+    sec += KeyValue(
+        strings['note_info_compatible'], strings['compatible_yes'] if note.note.old else strings['compatible_no']
+    )
 
     sec += Section(
         Italic(format_datetime(note.created_date, locale=strings['language_info']['babel'])),

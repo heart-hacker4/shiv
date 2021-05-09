@@ -6,6 +6,7 @@ STRINGS:
   notes:
     # Parse modes
     md: "Markdown"
+    preformatted: "Preformatted"
     html: "HTML"
     none: "No parsing"
 
@@ -27,14 +28,24 @@ STRINGS:
     note_group: "Group"
     saved_too_much: "<b>Warning!</b> You are trying to save notes/groups over a limit! Please ask in @SophieSupport."
 
+    # Button errors
+    error_saving: "<b>Error saving note!</b>"
+    buttons_wrong_action: "Button \"<code>{button_name}</code>\" has the wrong action \"<code>{action}</code>\", please refer to Sophie's documentation to see a list of valid actions."
+    buttons_should_have_arg: "Button \"<code>{button_name}</code>\" has an action \"<code>{action}</code>\" that requires an argument, please refer to Sophie's documentation."
+    too_long_row: "A buttons row is too long."
+
     # /savemedia
-    send_files: "Please send media files right now. Once it will be done press a button below."
+    send_files: "Please send some media files, Once you're done press the button below."
     send_files_1: "You can send up to 10 files."
+    send_files_2: "You can add a text caption to every file while you upload it or after it has been uploaded by sending a new text message."
     done_button: "✅ Done"
-    send_files_2: "Type /cancel to exit the wizard."
-    bad_file_type: "The file type you send is incorrect, you can make a media group only with same type!"
-    bad_file_type_1: "Please upload the right one right now."
-    too_much_files: "You are trying to upload too much files (above 10)!"
+    cancel_button: "🚫 Cancel"
+    no_file_for_caption: "Please send a file first to add a caption to it!"
+    caption_too_big: "The caption you want to save is too big! Please keep it shorter than {} symbols!"
+    bad_file_type: "The file type you sent is incorrect, you can only make a media group with the same type!"
+    bad_file_type_1: "Please try again with the correct file type."
+    too_much_files: "You are trying to upload more than 10 files!"
+    no_file_found: "Error! No file with this id was found. Cannot update its caption!"
 
     # /get
     cant_find_note: I can't find this note in <b>{chat_name}</b>!
@@ -69,19 +80,28 @@ STRINGS:
     query_not_found: "Nothing was found in <b>{chat_name}</b> by your query!"
 
     # /noteinfo
+
+    compatible_yes: "Yes"
+    compatible_no: "No"
+
     note_info_title: "Note info"
     note_info_note: "Note names"
+    note_info_id: "ID"
     note_info_desc: "Description"
     note_info_preview: "Preview"
     note_info_content: "Note content"
     note_info_parsing: "Parse mode"
+    note_info_multiple_group: "Contains media files"
     note_info_group: "Group"
+    note_info_compatible: "Compatible mode"
     note_info_created: "Created"
     note_info_updated: "Last updated"
     note_info_user_form: "by {user} ({user_id})"
     note_info_note_url: "Note URL"
     user_blocked: "Write /start in my PM!"
     # Note content
+    mediagroup: "Media group ({content})"
+    buttons: "Buttons"
     text: "Text"
     sticker: "Sticker"
     photo: "Photo"
@@ -91,6 +111,7 @@ STRINGS:
     video_note: "Video note"
     voice: "Voice"
     animation: "GIF"
+    contact: "Contact"
 
     # /privatenotes
     already_enabled: "Private notes are already enabled in <b>{chat_name}</b>"

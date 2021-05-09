@@ -33,7 +33,7 @@ from sophie_bot.services.redis import redis
 from .utils.connections import chat_connection, set_connected_chat, get_connection_data
 from .utils.language import get_strings_dec
 from .utils.message import get_arg
-from .utils.notes_parser.buttons import BUTTONS
+# from .utils.notes_parser.buttons import BUTTONS
 from .utils.user_details import get_chat_dec, is_user_admin
 
 connect_to_chat_cb = CallbackData('connect_to_chat_cb', 'chat_id')
@@ -200,7 +200,7 @@ async def connected_start_state(message, strings, chat):
         redis.delete(key)
 
 
-BUTTONS.update({'connect': 'btn_connect_start'})
+# BUTTONS.update({'connect': 'btn_connect_start'})
 
 
 @register(CommandStart(re.compile(r'btn_connect_start')), allow_kwargs=True)

@@ -1,8 +1,12 @@
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Optional, List
 
 from odmantic import EmbeddedModel
 from pydantic import validator
+
+from sophie_bot.modules.utils.notes_parser.buttons import ButtonFabric
+
+CAPTION_LENGTH = 1024
 
 
 class FileType(str, Enum):
@@ -17,7 +21,8 @@ class FileType(str, Enum):
 
 
 class NoteFile(EmbeddedModel):
-    id: Union[str, List[str]]
+    id: Optional[str]
+    caption: Optional[str]
     type: FileType
 
     @validator('id')
@@ -26,17 +31,25 @@ class NoteFile(EmbeddedModel):
             raise ValueError('File ID should be shorter than 128 symbols!')
         return v
 
+    @validator('caption')
+    def caption_length(cls, v):
+        if v and len(v) > CAPTION_LENGTH:
+            raise ValueError(f'Caption text should be less than {CAPTION_LENGTH}!')
+        return v
+
 
 class ParseMode(str, Enum):
     none = None
     md = 'md'
+    preformatted = 'preformatted'
     html = 'html'
 
 
 class BaseNote(EmbeddedModel):
     parse_mode: ParseMode
-    file: Optional[NoteFile]
+    files: Optional[List[NoteFile]]
     text: Optional[str]
+    buttons: Optional[ButtonFabric]
     preview: bool
     old: bool = False
 
@@ -46,8 +59,8 @@ class BaseNote(EmbeddedModel):
             raise ValueError('Text should be shorter than 6144 symbols!')
         return v
 
-    @validator('old')
-    def old_markdown(cls, v, values):
-        if not v and values['parse_mode'] == ParseMode.md:
-            raise ValueError("New notes can't have a Markdown parse_mode!")
-        return v
+    # @validator('old')
+    # def old_markdown(cls, v, values):
+    #    if not v and values['parse_mode'] is ParseMode.md:
+    #        raise ValueError("New notes can't have a Markdown parse_mode!")
+    #    return v

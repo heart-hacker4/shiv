@@ -19,14 +19,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import difflib
-from typing import List, Optional
+from typing import List, Optional, Union
 
+from aiogram.types import Message
 from odmantic import query
 
 from sophie_bot.models.notes import BaseNote
-from sophie_bot.modules.utils.notes_parser.send_new import send_new_note
+from sophie_bot.modules.utils.message import get_arg
+from sophie_bot.modules.utils.notes_parser.send import send_note
 from sophie_bot.modules.utils.text import Section, KeyValue, VList, HList
 from sophie_bot.services.mongo import db, engine
+from sophie_bot.types.chat import ChatId
 from ..models import SavedNote
 
 
@@ -46,6 +49,22 @@ async def find_note(arg: str, chat_id: int) -> Optional[SavedNote]:
     return None
 
 
+async def get_note_w_prediction(
+        message: Message, arg: str, chat_id: ChatId, chat_name: str, strings: dict
+) -> Union[Message, SavedNote]:
+    note_name = get_arg(message).lower()
+    if note_name[0] == '#':
+        note_name = note_name[1:]
+
+    if not (note := await find_note(arg, chat_id)):
+        text = strings['cant_find_note'].format(chat_name=chat_name)
+        if alleged_note_name := await get_similar_note(chat_id, note_name):
+            text += strings['u_mean'].format(note_name=alleged_note_name)
+        return await message.reply(text)
+
+    return note
+
+
 async def get_similar_note(chat_id, note_name):
     all_notes = []
     async for note in db.saved_note.find({'chat_id': chat_id}):
@@ -60,7 +79,7 @@ async def get_similar_note(chat_id, note_name):
 
 
 async def get_note(message, note: BaseNote,
-                   chat_id=None, send_id=None, reply_to=None, noformat=False, event=None, user=None):
+                   chat_id=None, send_id=None, reply_to=None, raw: bool = False, event=None, user=None):
     if not chat_id:
         chat_id = message.chat.id
 
@@ -72,7 +91,7 @@ async def get_note(message, note: BaseNote,
     elif not reply_to:
         reply_to = message.message_id
 
-    return await send_new_note(send_id, note, reply_to=reply_to)
+    return await send_note(send_id, note, reply_to=reply_to, message=message, raw=raw)
 
 
 async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
