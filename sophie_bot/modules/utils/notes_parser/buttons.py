@@ -168,13 +168,13 @@ class ButtonFabric(List[List[DBButton]]):
     def get_callback(self, button: DBButton, options: DefinedButtonOptions, chat_id: ChatId):
         return BUTTON_CALLBACK_PATTERN.format(
             prefix=options.cb_prefix,
-            action=button.action,
-            argument=button.argument,
+            action=button['action'],
+            argument=button['argument'],
             chat_id=chat_id
         )
 
     def unparse_button(self, button: DBButton, is_pm: bool, chat_id: ChatId) -> (str, RealButtonTypes, str):
-        options = BUTTONS[button.action]
+        options = BUTTONS[button['action']]
         callback_data = self.get_callback(button, options, chat_id)
 
         if options.type is DefinedButtonType.url:
