@@ -7,6 +7,8 @@ from pydantic import validator
 from sophie_bot.models.notes import BaseNote
 from sophie_bot.types.chat import ChatId
 
+DEFAULT_GROUP_NAME = 'ungrouped'
+
 MAX_NOTES_PER_CHAT = 5000
 MAX_GROUPS_PER_CHAT = 400
 
@@ -38,6 +40,12 @@ class SavedNote(Model):
     def name_group_length(cls, v):
         if len(v) > 64:
             raise ValueError("Can't be longer than 64 symbols")
+        return v
+
+    @validator('group')
+    def note_group_none(cls, v):
+        if v == DEFAULT_GROUP_NAME:
+            return None
         return v
 
     @validator('description')

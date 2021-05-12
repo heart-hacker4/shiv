@@ -107,7 +107,7 @@ async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
 
 
 async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hidden=False,
-                             purify_groups=False) -> List[Section]:
+                             purify_groups=False) -> Optional[List[Union[Section, VList]]]:
     if not notes:
         return []
 
@@ -117,7 +117,7 @@ async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hi
         if group in ['hidden', 'admin'] and not show_hidden:
             continue
 
-        notes_list = []
+        notes_list: List[KeyValue] = []
 
         for note in [x for x in notes if x.group == group]:
             if name_filter and not any([name_filter in x.lower() for x in note.names]):
@@ -133,7 +133,6 @@ async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hi
 
         # Remove groups section if there is only 'nogroup' and purify_groups is on
         if purify_groups and len(groups) == 1 and not groups[0]:
-            # The first element is 'nogroup' secion
-            pass
+            return [VList(*notes_list)]
 
-    return notes_section
+    return notes_section or None

@@ -31,7 +31,7 @@ from sophie_bot.modules.utils.message import get_arg, need_args_dec
 from sophie_bot.modules.utils.text import STFDoc, Section, KeyValue, Code, Italic, HList
 from sophie_bot.modules.utils.user_details import get_user_link
 from sophie_bot.services.mongo import db, engine
-from ..models import SavedNote
+from ..models import SavedNote, DEFAULT_GROUP_NAME
 from ..utils.clean_notes import clean_notes
 from ..utils.get import get_similar_note, get_notes_sections, find_note, get_note_name, get_notes
 
@@ -45,7 +45,7 @@ async def get_group_hashtag(message, chat, strings, regexp=None):
     chat_id = chat['chat_id']
     group_name = message.text.split(' ', 1)[0][1:].lower()
 
-    if group_name == 'nogroup':
+    if group_name == DEFAULT_GROUP_NAME:
         group_name = None
 
     if not await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.group == group_name)):
@@ -53,7 +53,7 @@ async def get_group_hashtag(message, chat, strings, regexp=None):
 
     notes = await get_notes_sections(await get_notes(chat_id), group_filter=[group_name])
     doc = STFDoc(Section(
-        KeyValue(strings['group_notes_header'], Code(group_name or 'nogroup')),
+        KeyValue(strings['group_notes_header'], Code(group_name or DEFAULT_GROUP_NAME)),
         *notes,
         title=strings['notelist_header'].format(chat_name=chat['chat_title'])
     ))

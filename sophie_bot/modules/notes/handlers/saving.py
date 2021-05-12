@@ -9,6 +9,7 @@ from sophie_bot.modules.utils.language import get_strings_dec
 from sophie_bot.modules.utils.message import need_args_dec, get_arg
 from sophie_bot.modules.utils.notes_parser.encode import get_parsed_note_list
 from sophie_bot.services.mongo import engine
+from ..models import DEFAULT_GROUP_NAME
 from ..utils.get import get_note_w_prediction
 from ..utils.saving import get_note_description, get_names_group, upsert_note, build_saved_text, save_and_check
 
@@ -49,7 +50,7 @@ async def save_note(message: Message, chat: dict, strings: dict):
         description=desc,
         note_names=note_names,
         note=note_data,
-        note_group=note_group
+        note_group=note_group or DEFAULT_GROUP_NAME
     )
 
     await message.reply(str(doc))

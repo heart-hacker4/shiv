@@ -16,8 +16,9 @@ STRINGS:
     saved: "Saved"
     updated: "Updated"
     names: "Names"
-    getting_tip: "Note getting tip"
+
     you_can_get_notes: "You can retrieve notes by using <code>/get name</code>, or <code>#name</code>"
+    you_can_get_note: "You can get this note by using <code>/get {name}</code>, or <code>#{name}</code>"
     # Translator note: please keep sure that you don't have space in the end of string
     note_aliases: "\nNote aliases:"
     blank_note: "Saving blank note is not allowed!"
@@ -88,7 +89,13 @@ STRINGS:
     note_info_note: "Note names"
     note_info_id: "ID"
     note_info_desc: "Description"
+    none_description: "None"
+
     note_info_preview: "Preview"
+
+    preview_yes: "Yes"
+    preview_no: "No"
+
     note_info_content: "Note content"
     note_info_parsing: "Parse mode"
     note_info_multiple_group: "Contains media files"

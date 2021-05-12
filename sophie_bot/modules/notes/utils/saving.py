@@ -154,8 +154,8 @@ def build_saved_text(
     sec = Section(
         # KeyValue(strings['status'], strings[status]),
         KeyValue(strings['names'], HList(*note_names, prefix='#')),
-        KeyValue(strings['note_info_desc'], description),
-        KeyValue(strings['note_info_preview'], note.preview),  # TODO: translateable
+        KeyValue(strings['note_info_desc'], description or strings['none_description']),
+        KeyValue(strings['note_info_preview'], strings['preview_yes'] if note.preview else strings['preview_no']),
         title=strings['saving_title'].format(chat_name=chat_name)
     )
     # if len(files_count := note.files) > 1:
@@ -164,10 +164,9 @@ def build_saved_text(
         sec += KeyValue(strings['note_info_parsing'], Code(str(strings[note.parse_mode])))
 
     if note_group:
-        note_group = note_group
         sec += KeyValue(strings['note_group'], f'#{note_group}')
 
+    sec += strings['you_can_get_note'].format(name=note_names[0])
     doc += sec
-    doc += Section(strings['you_can_get_notes'], title=strings['getting_tip'])
 
     return doc
