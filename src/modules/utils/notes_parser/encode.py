@@ -5,7 +5,7 @@ from aiogram.types import Message
 from aiogram.utils.text_decorations import HtmlDecoration
 
 from src.models.notes import BaseNote, ParseMode
-from src.modules.utils.message import get_args
+from src.modules.utils.message import get_args, get_command
 from .buttons import ButtonFabric
 from .parse_mode import HtmlDecorationWithoutEscaping
 from .send import FILE_TYPES_FUNCS
@@ -75,17 +75,20 @@ async def get_parsed_note_list(
     # Default values
     files = None
 
-    # Set a text of args needed to remove in origin message later
-    if not (to_split := (''.join([" " + q for q in get_args(message)[:split_args]]))):
-        to_split = ' '
-
     # Set a parse mode regarding of the origin message text
     parse_mode = get_msg_parse_mode(get_message_raw_text(message))
     text = get_parsed_msg(message, parse_mode)
 
     # Remove command and args from origin message
-    if message.get_command() and message.get_args():
-        text = text.removeprefix(message.get_command() + to_split).lstrip()
+    if get_command(message) and get_args(message):
+        # Remove command message
+        text = text.removeprefix(get_command(message)).lstrip()
+
+        # Set a text of args needed to remove in origin message
+        if not (to_split := (' '.join([q for q in get_args(message)[:split_args]]))):
+            to_split = ' '
+
+        text = text.removeprefix(to_split)
 
     buttons = ButtonFabric()
     text = buttons.parse_text(text)

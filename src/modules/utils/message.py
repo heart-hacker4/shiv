@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from typing import Optional, List
+
+from aiogram.types import Message
 
 ENABLE_KEYWORDS = ('true', 'enable', 'on', '1', 'yes')
 DISABLE_KEYWORDS = ('false', 'disable', 'off', '0', 'no')
@@ -28,17 +31,23 @@ class InvalidTimeUnit(Exception):
 
 def get_arg(message):
     try:
-        return message.get_args().split()[0]
+        return (message.get_args() or message.text.split(' ', 1)[1]).split(' ')[0]
     except IndexError:
         return ''
 
 
-def get_args(message):
-    args = message.get_args().split()
-    if args is None:
-        # getting args from non-command
-        args = message.text.split()
-    return args
+def get_command(message: Message) -> Optional[str]:
+    """Returns a command text"""
+    text = message.text
+    if not text.startswith('/') and not text.startswith('!'):
+        return None
+    return text.split(' ', 1)[0]
+
+
+def get_args(message: Message) -> List[str]:
+    text: str = message.text
+    text_no_cmd: Optional[str] = text.split(get_command(message), 1)[1].lstrip()
+    return text_no_cmd.split(' ')
 
 
 def get_args_str(message):
