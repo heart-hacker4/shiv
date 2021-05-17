@@ -1,12 +1,12 @@
 from typing import Callable
 
 from src import dp
-from src.modules import LOADED_MODULES
+from src.modules import MODULES
 from src.utils.logger import log
 
 
 async def __before_serving__(loop):
-    for module in [m for m in LOADED_MODULES if hasattr(m, 'OPFunctions')]:
+    for module in [m for m in MODULES if hasattr(m, 'OPFunctions')]:
         log.debug('Adding OP functions from: ' + module.__name__)
         class_object = module.OPFunctions
 

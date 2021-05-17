@@ -4,8 +4,7 @@ import requests
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import Message
 
-from src.decorator import REGISTRED_COMMANDS
-from src.modules import LOADED_MODULES
+from src.modules import MODULES
 from src.modules.utils.covert import convert_size
 from src.modules.utils.message import ENABLE_KEYWORDS, DISABLE_KEYWORDS
 from src.modules.utils.text import Section, KeyValue, STFDoc, Code, HList
@@ -25,7 +24,7 @@ class OPFunctions:
         # Detailed stats
         if arg_raw := arg_raw.lower():
             try:
-                module = next(x for x in LOADED_MODULES if arg_raw in x.__name__)
+                module = next(x for x in MODULES if arg_raw in x.__name__)
             except StopIteration:
                 return await message.reply(f'Module not found - {arg_raw}!')
 
@@ -50,8 +49,7 @@ class OPFunctions:
                 KeyValue("Version", SOPHIE_VERSION),
                 KeyValue("Run mode",
                          f"Webhooks ({os.getenv('WEBHOOKS_PORT')})" if os.getenv('WEBHOOKS') else 'Polling'),
-                KeyValue("Loaded modules", Code(len(LOADED_MODULES))),
-                KeyValue("Commands registred", Code(len(REGISTRED_COMMANDS))),
+                KeyValue("Loaded modules", Code(len(MODULES))),
                 title="General"
             ), Section(
                 KeyValue('MongoDB size', f"{convert_size(mongo_used)} / {convert_size(mongo_free)}"),
@@ -61,7 +59,7 @@ class OPFunctions:
         ]
 
         usage_count = []
-        for module in [m for m in LOADED_MODULES if hasattr(m, '__usage_count__')]:
+        for module in [m for m in MODULES if hasattr(m, '__usage_count__')]:
             usage_data = await module.__usage_count__()
             usage_count.extend(usage_data) if type(usage_data) is list else usage_count.append(usage_data)
 
@@ -71,7 +69,7 @@ class OPFunctions:
         ))
 
         # Appends __stats__ to the end
-        for module in [m for m in LOADED_MODULES if hasattr(m, '__stats__')]:
+        for module in [m for m in MODULES if hasattr(m, '__stats__')]:
             data.append(await module.__stats__())
 
         # TODO: WTF
@@ -80,7 +78,7 @@ class OPFunctions:
         doc = STFDoc(
             Section(*data, title="Stats"),
             Section(
-                HList(*[x.__name__.split('.')[2] for x in LOADED_MODULES if hasattr(x, '__detailed_stats__')]),
+                HList(*[x.__name__.split('.')[2] for x in MODULES if hasattr(x, '__detailed_stats__')]),
                 title='Detailed stats available for modules')
         )
 

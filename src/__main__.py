@@ -24,7 +24,7 @@ from aiogram import executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 from src import dp, TOKEN, bot
-from src.modules import ALL_MODULES, LOADED_MODULES
+from src.modules import MODULES, load_modules
 from src.utils.logger import log
 
 if os.getenv('DEBUG_MODE', False):
@@ -34,28 +34,9 @@ if os.getenv('DEBUG_MODE', False):
 LOAD = os.getenv("LOAD", "").split(',')
 DONT_LOAD = os.getenv("DONT_LOAD", "").split(',')
 
-# Import inbuilt filters
-import_module("src.filters")
-
-if os.getenv('LOAD_MODULES', True):
-    # FIXME: LOAD[0]
-    if LOAD and LOAD[0]:
-        modules = LOAD
-    else:
-        modules = ALL_MODULES
-
-    modules = [x for x in modules if x not in DONT_LOAD]
-
-    log.info("Modules to load: %s", str(modules))
-    for module_name in modules:
-        log.debug(f"Importing <d><n>{module_name}</></>")
-        imported_module = import_module("src.modules." + module_name)
-        LOADED_MODULES.append(imported_module)
-    log.info("Modules loaded!")
-else:
-    log.warning("Not importing modules!")
-
 loop = asyncio.get_event_loop()
+
+load_modules()
 
 # Import misc stuff
 if not os.getenv('DEBUG_MODE', False):
@@ -63,7 +44,7 @@ if not os.getenv('DEBUG_MODE', False):
 
 
 async def before_srv_task(loop):
-    for module in [m for m in LOADED_MODULES if hasattr(m, '__before_serving__')]:
+    for module in [m for m in MODULES if hasattr(m, '__before_serving__')]:
         log.debug('Before serving: ' + module.__name__)
         loop.create_task(module.__before_serving__(loop))
 
