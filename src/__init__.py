@@ -22,22 +22,18 @@ import os
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher, types
-from aiogram.bot.api import TelegramAPIServer, TELEGRAM_PRODUCTION
+from aiogram.bot.api import TelegramAPIServer
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from dotenv import load_dotenv
 
 from src.utils.logger import log
-from src.versions import SOPHIE_VERSION
+from src.config import SETTINGS
 
-dotenv_path = Path('.') / 'data' / 'config.env'
-load_dotenv(dotenv_path=dotenv_path, verbose=True)
 
-log.info("----------------------")
-log.info("|      SophieBot     |")
-log.info("----------------------")
-log.info("Version: " + SOPHIE_VERSION)
+SOPHIE_VERSION = "v2.2.5"
+log.info("Sophie version: " + SOPHIE_VERSION)
 
-if os.getenv('DEBUG_MODE', False):
+if SETTINGS.debug_mode:
     SOPHIE_VERSION += "-debug"
     log.setLevel(logging.DEBUG)
     log.warn("! Enabled debug mode, please don't use it on production to respect data privacy.")
@@ -60,12 +56,10 @@ if url := os.getenv("BOTAPI_SERVER", None):
     server = TelegramAPIServer.from_base(url)
 
 # AIOGram
-bot = Bot(token=TOKEN, parse_mode=types.ParseMode.HTML, server=server)
-storage = RedisStorage2(
-    host=os.getenv("REDIS_URI", "localhost"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
-    db=int(os.getenv("REDIS_DB_FSM", 1))
-)
+SERVER = TelegramAPIServer(SETTINGS.server_base_url, SETTINGS.server_file_url)
+
+bot = Bot(token=SETTINGS.token, parse_mode=types.ParseMode.HTML, server=SERVER)
+storage = RedisStorage2(host=SETTINGS.redis_url, db=SETTINGS.redis_states_db, state_ttl=3600)
 dp = Dispatcher(bot, storage=storage)
 
 loop = asyncio.get_event_loop()

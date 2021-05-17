@@ -27,14 +27,18 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.exceptions import BadRequest, Unauthorized, ChatNotFound
 from telethon.tl.functions.users import GetFullUserRequest
 
-from src import OPERATORS, bot
+from functools import wraps
+
+from src import bot
 from src.models.chat import SavedChat
 from src.services.mongo import db
 from src.services.redis import bredis
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from src.types.chat import ChatId
 from .language import get_string
-from .message import get_arg
+from .message import get_arg, get_args
+from aiogram.types import Message, User
+from src.models.chat import SavedUser
 
 
 async def add_user_to_db(user):
@@ -261,97 +265,6 @@ async def is_chat_creator(event: Union[Message, CallbackQuery], chat_id, user_id
     return False
 
 
-async def get_user_by_text(message, text: str):
-    # Get all entities
-    entities = filter(lambda ent: ent['type'] == 'text_mention' or ent['type'] == 'mention', message.entities)
-    for entity in entities:
-        # If username matches entity's text
-        if text in entity.get_text(message.text):
-            if entity.type == 'mention':
-                # This one entity is comes with mention by username, like @rSophieBot
-                return await get_user_by_username(text)
-            elif entity.type == 'text_mention':
-                # This one is link mention, mostly used for users without an username
-                return await get_user_by_id(entity.user.id)
-
-    # Now let's try get user with user_id
-    # We trying this not first because user link mention also can have numbers
-    if text.isdigit():
-        user_id = int(text)
-        if user := await get_user_by_id(user_id):
-            return user
-
-    # Not found anything 😞
-    return None
-
-
-async def get_user(message, allow_self=False):
-    args = message.text.split(None, 2)
-    user = None
-
-    # Only 1 way
-    if len(args) < 2 and "reply_to_message" in message:
-        return await get_user_by_id(message.reply_to_message.from_user.id)
-
-    # Use default function to get user
-    if len(args) > 1:
-        user = await get_user_by_text(message, args[1])
-
-    if not user and bool(message.reply_to_message):
-        user = await get_user_by_id(message.reply_to_message.from_user.id)
-
-    if not user and allow_self:
-        # TODO: Fetch user from message instead of db?! less overhead
-        return await get_user_by_id(message.from_user.id)
-
-    # No args and no way to get user
-    if not user and len(args) < 2:
-        return None
-
-    return user
-
-
-async def get_user_and_text(message, **kwargs):
-    args = message.text.split(' ', 2)
-    user = await get_user(message, **kwargs)
-
-    if len(args) > 1:
-        if (test_user := await get_user_by_text(message, args[1])) == user:
-            if test_user:
-                print(len(args))
-                if len(args) > 2:
-                    return user, args[2]
-                else:
-                    return user, ''
-
-    if len(args) > 1:
-        return user, message.text.split(' ', 1)[1]
-    else:
-        return user, ''
-
-
-async def get_users(message):
-    args = message.text.split(None, 2)
-    text = args[1]
-    users = []
-
-    for text in text.split('|'):
-        if user := await get_user_by_text(message, text):
-            users.append(user)
-
-    return users
-
-
-async def get_users_and_text(message):
-    users = await get_users(message)
-    args = message.text.split(None, 2)
-
-    if len(args) > 1:
-        return users, args[1]
-    else:
-        return users, ''
-
-
 async def get_chat(chat_id: ChatId):
     chat_data = await db.chat_list.find_one({'chat_id': chat_id})
     return SavedChat(
@@ -360,44 +273,6 @@ async def get_chat(chat_id: ChatId):
         title=chat_data['chat_title'],
         type=chat_data['type']
     )
-
-
-def get_user_and_text_dec(**dec_kwargs):
-    def wrapped(func):
-        async def wrapped_1(*args, **kwargs):
-            message = args[0]
-            if hasattr(message, 'message'):
-                message = message.message
-
-            user, text = await get_user_and_text(message, **dec_kwargs)
-            if not user:
-                await message.reply("I can't get the user!")
-                return
-            else:
-                return await func(*args, user, text, **kwargs)
-
-        return wrapped_1
-
-    return wrapped
-
-
-def get_user_dec(**dec_kwargs):
-    def wrapped(func):
-        async def wrapped_1(*args, **kwargs):
-            message = args[0]
-            if hasattr(message, 'message'):
-                message = message.message
-
-            user, text = await get_user_and_text(message, **dec_kwargs)
-            if not bool(user):
-                await message.reply("I can't get the user!")
-                return
-            else:
-                return await func(*args, user, **kwargs)
-
-        return wrapped_1
-
-    return wrapped
 
 
 def get_chat_dec(allow_self=False, fed=False):

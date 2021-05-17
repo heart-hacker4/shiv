@@ -44,7 +44,7 @@ from pymongo import DeleteMany, InsertOne
 from src import OWNER_ID, BOT_ID, OPERATORS, decorator, bot
 from src.services.mongo import db
 from src.services.redis import redis
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from .utils.connections import get_connected_chat, chat_connection
 from .utils.language import get_strings_dec, get_strings, get_string
 from .utils.message import need_args_dec, get_cmd

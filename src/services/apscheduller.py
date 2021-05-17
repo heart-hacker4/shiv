@@ -21,13 +21,14 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
 
-from src.services.redis import HOST, PORT, DB
+from src.services.redis import HOST, DB
 from src.utils.logger import log
+from src.config import SETTINGS
 
 DEFAULT = "default"
 
 jobstores = {
-    DEFAULT: RedisJobStore(host=HOST, port=PORT, db=DB)
+    DEFAULT: RedisJobStore(host=HOST, port=SETTINGS.redis_schedules_db, db=DB)
 }
 executors = {DEFAULT: AsyncIOExecutor()}
 job_defaults = {"coalesce": False, "max_instances": 3}

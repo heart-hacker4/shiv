@@ -1,7 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
-
-from src import OPERATORS, OWNER_ID
+from ..config import OP_SETTINGS
 
 
 class IsOP(BoundFilter):
@@ -11,7 +10,7 @@ class IsOP(BoundFilter):
         self.is_owner = is_op
 
     async def check(self, message: types.Message):
-        if message.from_user.id in OPERATORS:
+        if message.from_user.id in OP_SETTINGS.operators:
             return True
 
 
@@ -22,4 +21,4 @@ class IsOwner(BoundFilter):
         self.is_owner = is_owner
 
     async def check(self, message: types.Message):
-        return message.from_user.id == OWNER_ID
+        return message.from_user.id == OP_SETTINGS.owner

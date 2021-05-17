@@ -7,7 +7,7 @@ from aiogram.types import MessageId, User, InputMedia
 from src import bot
 from src.models.notes import BaseNote, ParseMode
 from src.models.notes import CAPTION_LENGTH
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from src.types.chat import ChatId
 from .buttons import ButtonFabric, BUTTONS_EXCEPTIONS
 from .text import random_parser

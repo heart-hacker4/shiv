@@ -27,7 +27,7 @@ from babel.dates import format_datetime, format_timedelta
 from src import BOT_ID, bot
 from src.decorator import register
 from src.services.redis import redis
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from .misc import customise_reason_finish, customise_reason_start
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec

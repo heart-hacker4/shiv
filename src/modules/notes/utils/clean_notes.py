@@ -4,7 +4,7 @@ from functools import wraps
 from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
 
 from src.services.mongo import engine
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from ..models import CleanNotes
 
 

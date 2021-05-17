@@ -4,6 +4,7 @@ telethon~=1.17.0
 aiogram
 
 # DBs
+pydantic[dotenv]
 redis
 aioredis # Redis memery storage fom aiogram
 pymongo

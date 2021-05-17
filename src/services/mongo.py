@@ -26,19 +26,17 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from src import log
+from src.config import SETTINGS
 
-MONGO_URI = os.getenv("MONGO_URI", "localhost")
-MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
-MONGO_DB = os.getenv("MONGO_DB", "sophie")
+MONGO_URI = SETTINGS.mongo_url
+MONGO_DB = SETTINGS.mongo_db
 
 # Init MongoDB
-mongodb = MongoClient(MONGO_URI, MONGO_PORT)[MONGO_DB]
-motor = motor_asyncio.AsyncIOMotorClient(MONGO_URI, MONGO_PORT)
-db = motor[MONGO_DB]
-
-engine = AIOEngine(motor, MONGO_DB)
+_mongodb_motor = motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+engine = AIOEngine(_mongodb_motor, MONGO_DB)
+db = _mongodb_motor[MONGO_DB]
 
 try:
-    asyncio.get_event_loop().run_until_complete(motor.server_info())
+    asyncio.get_event_loop().run_until_complete(_mongodb_motor.server_info())
 except ServerSelectionTimeoutError:
     sys.exit(log.critical("Can't connect to mongodb! Exiting..."))

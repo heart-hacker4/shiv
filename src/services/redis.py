@@ -22,10 +22,11 @@ import sys
 import redis as redis_lib
 
 from src import log
+from src.config import SETTINGS
 
-HOST = os.getenv("REDIS_URI", "localhost")
-PORT = int(os.getenv("REDIS_PORT", 6379))
-DB = int(os.getenv("REDIS_DB_FSM", 1))
+HOST = SETTINGS.redis_url
+PORT = SETTINGS.redis_port
+DB = SETTINGS.redis_cache_db
 
 # Init Redis
 redis = redis_lib.StrictRedis(host=HOST, port=PORT, db=DB, decode_responses=True)

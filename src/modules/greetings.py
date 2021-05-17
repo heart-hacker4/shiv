@@ -42,7 +42,7 @@ from src.decorator import register
 from src.services.apscheduller import scheduler
 from src.services.mongo import db
 from src.services.redis import redis
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from src.stuff.fonts import ALL_FONTS
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
