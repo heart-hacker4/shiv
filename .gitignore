@@ -10,9 +10,6 @@ __pycache__/
 # Config
 data/config.env
 
-# Logs
-logs/
-
 # Virtual envirment
 venv/
 
