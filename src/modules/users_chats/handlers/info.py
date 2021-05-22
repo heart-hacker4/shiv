@@ -5,7 +5,7 @@ from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.users_chats.decorators import get_user_dec
 from src.models.chat import SavedUser, BaseUser
-from src.modules.utils.text import STFDoc, Section, HList, KeyValue, Code
+from stfu_tg import Doc, Section, HList, KeyValue, Code
 from typing import List
 from src.modules.utils.connections import chat_connection
 

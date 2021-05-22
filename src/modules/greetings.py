@@ -50,7 +50,7 @@ from .utils.message import need_args_dec, convert_time
 # from .utils.notes import get_parsed_note_list, unparse_note_item, send_note
 from .utils.restrictions import mute_user, restrict_user, unmute_user, kick_user
 from .utils.user_details import is_user_admin, get_user_link, check_admin_rights
-from ..utils.cached import cached
+from ..utils.cached import Cached
 
 
 class WelcomeSecurityState(StatesGroup):
@@ -926,7 +926,7 @@ async def clean_service_trigger(message, strings):
 _clean_welcome = 'cleanwelcome:{chat}'
 
 
-@cached()
+@Cached()
 async def get_greetings_data(chat: int) -> Optional[dict]:
     return await db.greetings.find_one({'chat_id': chat})
 

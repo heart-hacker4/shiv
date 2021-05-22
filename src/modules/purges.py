@@ -23,7 +23,7 @@ from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
 
 from src import bot
 from src.decorator import register
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from .utils.language import get_strings_dec
 from .utils.notes_parser.buttons import BUTTONS
 

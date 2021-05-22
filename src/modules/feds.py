@@ -53,7 +53,7 @@ from .utils.user_details import (
     is_chat_creator, get_user_link, get_user_and_text, check_admin_rights,
     is_user_admin, get_chat_dec
 )
-from ..utils.cached import cached
+from ..utils.cached import Cached
 
 
 class ImportFbansFileWait(StatesGroup):
@@ -1198,12 +1198,12 @@ async def fedban_check(message, fed, user, _, strings):
     await message.reply(text)
 
 
-@cached()
+@Cached()
 async def get_fed_by_id(fed_id: str) -> Optional[dict]:
     return await db.feds.find_one({'fed_id': fed_id})
 
 
-@cached()
+@Cached()
 async def get_fed_by_creator(creator: int) -> Optional[dict]:
     return await db.feds.find_one({'creator': creator})
 

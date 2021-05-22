@@ -1,6 +1,6 @@
 import os
 
-import requests
+import aiohttp
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import Message
 

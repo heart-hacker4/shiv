@@ -21,7 +21,7 @@ from telethon.errors import AdminRankEmojiNotAllowedError
 
 from src import BOT_ID, bot
 from src.decorator import register
-from src.services.telethon import tbot
+from src.services.tg_telethon import tbot
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 from .utils.user_details import (

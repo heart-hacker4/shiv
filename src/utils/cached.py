@@ -32,8 +32,7 @@ async def set_value(key, value, ttl):
         bredis.expire(key, ttl)
 
 
-class cached:
-
+class Cached:
     def __init__(self, ttl: Optional[Union[int, float]] = None, key: Optional[str] = None, no_self: bool = False):
         self.ttl = ttl
         self.key = key
@@ -44,7 +43,7 @@ class cached:
             self.func = args[0]
             # wrap
             functools.update_wrapper(self, self.func)
-            # return ``cached`` object when function is not being called
+            # return ``Cached`` object when function is not being called
             return self
         return self._set(*args, **kwargs)
 
@@ -75,7 +74,7 @@ class cached:
 
     async def reset_cache(self, *args, new_value=None, **kwargs):
         """
-        >>> @cached()
+        >>> @Cached()
         >>> def somefunction(arg):
         >>>     pass
         >>>

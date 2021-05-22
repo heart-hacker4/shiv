@@ -22,7 +22,7 @@ from aiogram.utils.exceptions import Unauthorized
 from src.modules.utils.user_details import is_user_admin
 from src.services.mongo import db
 from src.services.redis import redis
-from src.utils.cached import cached
+from src.utils.cached import Cached
 
 
 async def get_connected_chat(message, admin=False, only_groups=False, from_id=None, command=None):
@@ -43,7 +43,7 @@ async def get_connected_chat(message, admin=False, only_groups=False, from_id=No
     if cached := redis.hgetall(key):
         cached['status'] = True
         cached['chat_id'] = int(cached['chat_id'])
-        # return cached
+        # return Cached
 
     # if pm and not connected
     if not (connected := await get_connection_data(user_id)) or 'chat_id' not in connected:
@@ -60,7 +60,7 @@ async def get_connected_chat(message, admin=False, only_groups=False, from_id=No
     if chat_id not in user_chats:
         return {'status': None, 'err_msg': 'not_in_chat'}
 
-    chat_title = (await db.chat_list.find_one({'chat_id': chat_id}))['chat_title']
+    chat_title = message.chat.title
 
     # Admin rights check if admin=True
     try:
@@ -153,6 +153,6 @@ async def set_connected_command(user_id, chat_id, command):
     return await get_connection_data.reset_cache(user_id)
 
 
-@cached()
+@Cached()
 async def get_connection_data(user_id: int) -> dict:
     return await db.connections.find_one({'user_id': user_id})

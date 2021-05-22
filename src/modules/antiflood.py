@@ -40,7 +40,7 @@ from src.modules.utils.restrictions import ban_user, kick_user, mute_user
 from src.modules.utils.user_details import is_user_admin, get_user_link
 from src.services.mongo import db
 from src.services.redis import bredis, redis
-from src.utils.cached import cached
+from src.utils.cached import Cached
 from src.utils.logger import log
 
 cancel_state = CallbackData('cancel_state', 'user_id')
@@ -306,7 +306,7 @@ async def cancel_state_cb(event: CallbackQuery):
     await event.message.delete()
 
 
-@cached()
+@Cached()
 async def get_data(chat_id: int):
     return await db.antiflood.find_one(
         {'chat_id': chat_id}
