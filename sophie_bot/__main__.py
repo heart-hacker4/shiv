@@ -55,7 +55,6 @@ else:
 loop = asyncio.get_event_loop()
 
 # Import misc stuff
-import_module("sophie_bot.utils.exit_gracefully")
 if not os.getenv('DEBUG_MODE', False):
     import_module("sophie_bot.utils.sentry")
 
