@@ -17,17 +17,14 @@
 import html
 
 from aiogram.utils.exceptions import ChatAdminRequired
+from src.decorator import register
 from telethon.errors import AdminRankEmojiNotAllowedError
 
 from src import BOT_ID, bot
-from src.decorator import register
 from src.services.tg_telethon import tbot
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
-from .utils.user_details import (
-    get_user_dec, get_user_and_text_dec,
-    get_user_link, get_admins_rights
-)
+from .utils.user_details import (get_admins_rights, get_user_and_text_dec, get_user_dec, get_user_link)
 
 
 @register(cmds="promote", bot_can_promote_members=True, user_can_promote_members=True)

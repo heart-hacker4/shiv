@@ -21,11 +21,8 @@
 from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
-from src.modules.utils.message import get_arg, ENABLE_KEYWORDS, DISABLE_KEYWORDS
-from ..db.config import (
-    get_pm_notes, save_pm_notes, del_pm_notes,
-    get_clean_notes, save_clean_notes, del_clean_notes
-)
+from src.modules.utils.message import DISABLE_KEYWORDS, ENABLE_KEYWORDS, get_arg
+from ..db.config import (del_clean_notes, del_pm_notes, get_clean_notes, get_pm_notes, save_clean_notes, save_pm_notes)
 
 
 @dp.message_handler(commands=['privatenotes', 'pmnotes'], no_args=False, is_admin=True)

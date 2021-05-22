@@ -6,12 +6,12 @@ from aiogram.types import Message
 from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
-from src.modules.utils.message import need_args_dec, get_arg
+from src.modules.utils.message import get_arg, need_args_dec
 from src.modules.utils.notes_parser.encode import get_parsed_note_list
 from src.services.mongo import engine
 from ..models import DEFAULT_GROUP_NAME
 from ..utils.get import get_note_w_prediction
-from ..utils.saving import get_note_description, get_names_group, upsert_note, build_saved_text, save_and_check
+from ..utils.saving import build_saved_text, get_names_group, get_note_description, save_and_check, upsert_note
 
 ADD_ALIAS_REGEXP = re.compile(r'\+((?:\w+|\|)+)')
 DEL_ALIAS_REGEXP = re.compile(r'-((?:\w+|\|)+)')

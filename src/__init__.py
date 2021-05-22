@@ -18,16 +18,13 @@
 
 import asyncio
 import logging
-import os
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.bot.api import TelegramAPIServer
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
-from dotenv import load_dotenv
 
-from src.utils.logger import log
 from src.config import SETTINGS
-
+from src.utils.logger import log
 
 SOPHIE_VERSION = "v2.2.5"
 log.info("Sophie version: " + SOPHIE_VERSION)

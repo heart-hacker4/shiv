@@ -1,7 +1,7 @@
 from importlib import import_module
+from typing import Callable, List
 
 from src.utils.logger import log
-from typing import List, Callable
 
 # Import inbuilt filters
 import_module("src.filters")

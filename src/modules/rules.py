@@ -20,8 +20,8 @@
 import re
 
 from aiogram.dispatcher.filters import CommandStart
-
 from src.decorator import register
+
 from src.services.mongo import db
 from .utils.connections import chat_connection
 from .utils.disable import disableable_dec

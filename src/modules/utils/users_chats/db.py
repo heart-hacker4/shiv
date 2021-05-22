@@ -1,7 +1,8 @@
-from src.types.chat import ChatId
-from src.models.chat import SavedChat, SavedUser
 from typing import Optional
+
+from src.models.chat import SavedChat, SavedUser
 from src.services.mongo import db, engine
+from src.types.chat import ChatId
 
 
 async def get_chat(chat_id: ChatId) -> Optional[SavedChat]:

@@ -6,8 +6,6 @@ from src.models.chat import BaseUser
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.users_chats.decorators import get_user_dec
-from src.models.chat import SavedUser, BaseUser
-from stfu_tg import Doc, Section, HList, KeyValue, Code
 
 
 @dp.message_handler(commands=['info', 'userinfo'])

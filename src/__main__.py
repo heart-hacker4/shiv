@@ -24,9 +24,9 @@ from aiogram import executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 from src import dp
+from src.config import SETTINGS
 from src.modules import MODULES, load_modules
 from src.utils.logger import log
-from src.config import SETTINGS
 
 try:
     import uvloop

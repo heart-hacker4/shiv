@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
+from src.decorator import COMMANDS_ALIASES, register
 
-from src.decorator import register, COMMANDS_ALIASES
 from src.services.mongo import db
 from .utils.connections import chat_connection
 from .utils.disable import DISABLABLE_COMMANDS, disableable_dec

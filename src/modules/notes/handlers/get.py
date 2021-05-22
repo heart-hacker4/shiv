@@ -32,7 +32,7 @@ from src.modules.utils.notes_parser.send import send_note
 from src.modules.utils.user_details import is_user_admin
 from ..db.notes import get_note
 from ..utils.clean_notes import clean_notes
-from ..utils.get import get_similar_note, get_note_name
+from ..utils.get import get_note_name, get_similar_note
 
 RESTRICTED_SYMBOLS_IN_NOTENAMES = [':', '**', '__', '`', '"', '[', ']', "'", '$', '||', '^']
 

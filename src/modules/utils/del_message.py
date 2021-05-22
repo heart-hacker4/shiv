@@ -1,10 +1,12 @@
-from src.services.tg_telethon import tbot
-from src import bot
-from aiogram.types import MessageId
 from typing import List
-from src.types.chat import ChatId
-from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
+
+from aiogram.types import MessageId
 from aiogram.utils.exceptions import MessageCantBeDeleted, MessageToDeleteNotFound
+from telethon.errors.rpcerrorlist import MessageDeleteForbiddenError
+
+from src import bot
+from src.services.tg_telethon import tbot
+from src.types.chat import ChatId
 
 
 async def del_messages(chat_id: ChatId, messages: List[MessageId]) -> bool:

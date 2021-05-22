@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Union, Optional, Dict
+from typing import Dict, Optional, Union
 
 from aiogram.dispatcher.filters import BoundFilter
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from src.modules.utils.notes_parser.buttons import BUTTONS_CALLBACK_REGEXP, \
     RealButtonTypes

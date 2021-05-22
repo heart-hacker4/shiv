@@ -18,7 +18,7 @@
 
 from datetime import timedelta
 from functools import wraps
-from typing import Optional, List
+from typing import List, Optional
 
 from aiogram.types import Message
 

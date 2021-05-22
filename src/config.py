@@ -1,7 +1,7 @@
-from pydantic import BaseModel, BaseSettings, AnyUrl, validator
-from typing import Optional, Union, Tuple, List
-from aiogram.bot.api import TelegramAPIServer, TELEGRAM_PRODUCTION
+from typing import List, Optional
 
+from aiogram.bot.api import TELEGRAM_PRODUCTION
+from pydantic import AnyUrl, BaseSettings
 
 CONFIG_FILE_PATH = 'data/config.env'
 

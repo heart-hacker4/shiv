@@ -1,8 +1,9 @@
-from functools import wraps
-from aiogram.types import Message, CallbackQuery, User
-from typing import Union, Optional, List, Callable
+from typing import Callable, List, Optional, Union
+
+from aiogram.types import Message, User
+
+from src.models.chat import BaseUser, SavedUser
 from src.modules.utils.message import get_args
-from src.models.chat import SavedUser, BaseUser
 from .db import get_user_by_id, get_user_by_username
 from .tg_request import retrieve_user
 

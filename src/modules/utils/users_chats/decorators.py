@@ -1,10 +1,9 @@
 from functools import wraps
-from aiogram.types import Message, CallbackQuery, User
-from typing import Union, Optional, List
-from src.modules.utils.message import get_args
-from src.models.chat import SavedUser
-from .db import get_user_by_id, get_user_by_username
-from .message import get_user_and_text, get_user, get_users
+from typing import Union
+
+from aiogram.types import CallbackQuery, Message
+
+from .message import get_user, get_user_and_text, get_users
 
 
 def get_user_and_text_dec(**dec_kwargs):

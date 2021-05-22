@@ -1,8 +1,8 @@
-from pydantic import BaseModel, BaseSettings, AnyUrl, validator
-from typing import Optional, Union, List
-from aiogram.bot.api import TelegramAPIServer, TELEGRAM_PRODUCTION
+from typing import List
+
+from pydantic import BaseSettings, validator
+
 from src.config import CONFIG_FILE_PATH
-from src.types.chat import ChatId
 
 
 class OPSettings(BaseSettings):

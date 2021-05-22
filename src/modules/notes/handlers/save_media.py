@@ -1,21 +1,20 @@
 import asyncio
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import Message, ContentType
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ContentType, Message
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from bson import ObjectId
 
 from src import dp
-from src.models.notes import NoteFile, CAPTION_LENGTH
+from src.models.notes import CAPTION_LENGTH, NoteFile
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import need_args_dec
-from src.modules.utils.notes_parser.encode import get_msg_file
-from src.modules.utils.notes_parser.encode import get_parsed_note_list
+from src.modules.utils.notes_parser.encode import get_msg_file, get_parsed_note_list
 from ..db.notes import get_note_by_id, save_note
-from ..utils.saving import get_note_description, get_names_group, upsert_note, build_saved_text
+from ..utils.saving import build_saved_text, get_names_group, get_note_description, upsert_note
 
 MEDIA_CONTENT_TYPES = [
     ContentType.PHOTO,

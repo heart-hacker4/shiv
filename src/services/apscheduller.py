@@ -21,9 +21,9 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
 
-from src.services.redis import HOST, DB
-from src.utils.logger import log
 from src.config import SETTINGS
+from src.services.redis import DB, HOST
+from src.utils.logger import log
 
 DEFAULT = "default"
 

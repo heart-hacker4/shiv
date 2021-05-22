@@ -1,4 +1,4 @@
-from aiogram.utils.text_decorations import TextDecoration, HtmlDecoration
+from aiogram.utils.text_decorations import HtmlDecoration, TextDecoration
 
 
 class SDecoration(TextDecoration):

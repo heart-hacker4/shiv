@@ -18,9 +18,8 @@
 
 import html
 
-from src.config import get_int_key
-
 from src import bot
+from src.config import get_int_key
 from src.utils.logger import log
 
 

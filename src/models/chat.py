@@ -1,10 +1,10 @@
-from enum import Enum
-from typing import Optional, List, Union
 import html
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional, Union
 
-from pydantic import validator, BaseModel, Field
-from odmantic import EmbeddedModel, Model
+from odmantic import Model
+from pydantic import BaseModel, Field, validator
 
 from src.types.chat import ChatId
 

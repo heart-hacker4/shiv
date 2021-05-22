@@ -20,14 +20,11 @@
 
 from contextlib import suppress
 
-from aiogram.types.inline_keyboard import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton
-)
+from aiogram.types.inline_keyboard import (InlineKeyboardButton, InlineKeyboardMarkup)
 from aiogram.utils.exceptions import MessageNotModified
+from src.decorator import register
 
 from src import BOT_USERNAME
-from src.decorator import register
 from src.modules.utils.disable import disableable_dec
 from .language import select_lang_keyboard
 from .utils.language import get_strings_dec

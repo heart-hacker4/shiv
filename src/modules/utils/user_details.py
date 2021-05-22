@@ -24,10 +24,8 @@ from typing import Union
 
 from aiogram.dispatcher.handler import SkipHandler
 from aiogram.types import CallbackQuery, Message
-from aiogram.utils.exceptions import BadRequest, Unauthorized, ChatNotFound
+from aiogram.utils.exceptions import BadRequest, ChatNotFound, Unauthorized
 from telethon.tl.functions.users import GetFullUserRequest
-
-from functools import wraps
 
 from src import bot
 from src.models.chat import SavedChat
@@ -36,9 +34,7 @@ from src.services.redis import bredis
 from src.services.tg_telethon import tbot
 from src.types.chat import ChatId
 from .language import get_string
-from .message import get_arg, get_args
-from aiogram.types import Message, User
-from src.models.chat import SavedUser
+from .message import get_arg
 
 
 async def add_user_to_db(user):

@@ -1,17 +1,13 @@
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
-from aiogram.types import Message
-from aiogram.types import MessageId, User, InputMedia
+from aiogram.types import InputMedia, Message, MessageId, User
 
 from src import bot
-from src.models.notes import BaseNote, ParseMode
-from src.models.notes import CAPTION_LENGTH
+from src.models.notes import BaseNote, CAPTION_LENGTH, ParseMode
 from src.services.tg_telethon import tbot
 from src.types.chat import ChatId
-from .buttons import ButtonFabric, BUTTONS_EXCEPTIONS
-from .text import random_parser
-from .text import vars_parser
+from .buttons import BUTTONS_EXCEPTIONS, ButtonFabric
+from .text import random_parser, vars_parser
 
 MULTI_MESSAGE_FILE = ('sticker', 'video_note', 'contact')
 FILE_TYPES_NO_PREVIEW = ['animation']

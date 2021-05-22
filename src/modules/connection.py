@@ -21,16 +21,16 @@ import re
 
 from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.types import CallbackQuery
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from aiogram.utils.deep_linking import get_start_link
 from aiogram.utils.exceptions import BotBlocked, CantInitiateConversation
+from src.decorator import register
 
 from src import bot
-from src.decorator import register
 from src.services.mongo import db
 from src.services.redis import redis
-from .utils.connections import chat_connection, set_connected_chat, get_connection_data
+from .utils.connections import chat_connection, get_connection_data, set_connected_chat
 from .utils.language import get_strings_dec
 from .utils.message import get_arg
 # from .utils.notes_parser.buttons import BUTTONS

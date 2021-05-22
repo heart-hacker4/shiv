@@ -18,8 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from src.decorator import register
-from src.services.mongo import db
 
+from src.services.mongo import db
 from .utils.connections import chat_connection
 from .utils.disable import disableable_dec
 from .utils.language import get_strings_dec

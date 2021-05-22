@@ -1,9 +1,9 @@
 import re
 from enum import Enum, auto
-from typing import Optional, List, Match, AnyStr, NamedTuple
+from typing import AnyStr, List, Match, NamedTuple, Optional
 
 from aiogram.types import Message
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from odmantic import EmbeddedModel
 from telethon.tl.custom import Button as TButton
 

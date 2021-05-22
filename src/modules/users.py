@@ -17,22 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import datetime
-import html
-
-from aiogram.dispatcher.middlewares import BaseMiddleware
-
-from src import dp
-from src.modules.utils.text import KeyValue, Code, Section
-from src.services.mongo import db
-from src.utils.logger import log
 from .utils.connections import chat_connection
 from .utils.disable import disableable_dec
 from .utils.language import get_strings_dec
-from .utils.user_details import get_user_dec, get_user_link, is_user_admin, get_admins_rights
-
-
-
+from .utils.user_details import get_admins_rights, get_user_link
 
 
 @register(cmds="admincache", is_admin=True)

@@ -1,12 +1,13 @@
-from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.types import Message, Chat, User
-from src.modules.utils.users_chats.db import (
-    get_chat, save_chat, get_user_by_id, save_user, user_username_duplications, chat_username_duplications
-)
-from src.models.chat import SavedChat, SavedUser
 from datetime import datetime
-from src.utils.logger import log
+
+from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.types import Chat, Message, User
+
+from src.models.chat import SavedChat, SavedUser
+from src.modules.utils.users_chats.db import (chat_username_duplications, get_chat, get_user_by_id, save_chat,
+                                              save_user, user_username_duplications)
 from src.types.chat import ChatId
+from src.utils.logger import log
 
 
 class SaveUser(BaseMiddleware):

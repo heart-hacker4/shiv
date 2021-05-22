@@ -20,9 +20,9 @@
 import io
 
 from aiogram.types.input_file import InputFile
+from src.decorator import register
 
 from src import bot
-from src.decorator import register
 from .utils.disable import disableable_dec
 from .utils.language import get_strings_dec
 

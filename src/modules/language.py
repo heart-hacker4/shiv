@@ -19,14 +19,14 @@
 
 from contextlib import suppress
 
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from aiogram.utils.exceptions import MessageNotModified
-
 from src.decorator import register
-from src.modules.utils.text import KeyValue, Code
+from src.modules.utils.text import Code, KeyValue
+
 from src.services.mongo import db
-from .utils.language import LANGUAGES, get_strings_dec, change_chat_lang, get_chat_lang_info, get_strings
+from .utils.language import LANGUAGES, change_chat_lang, get_chat_lang_info, get_strings, get_strings_dec
 from .utils.message import get_arg
 
 select_lang_cb = CallbackData('select_lang_cb', 'lang', 'back_btn')

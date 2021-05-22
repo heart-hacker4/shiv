@@ -1,7 +1,9 @@
+from typing import Union
+
+from aiogram.utils.exceptions import ChatNotFound
+
 from src import bot
 from src.types.chat import ChatId
-from typing import Union
-from aiogram.utils.exceptions import ChatNotFound
 from src.utils.cached import Cached
 
 
