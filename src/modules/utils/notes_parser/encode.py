@@ -88,7 +88,7 @@ async def get_parsed_note_list(
         if not (to_split := (' '.join([q for q in get_args(message)[:split_args]]))):
             to_split = ' '
 
-        text = text.removeprefix(to_split)
+        text = text.removeprefix(to_split).lstrip()
 
     buttons = ButtonFabric()
     text = buttons.parse_text(text)
@@ -110,10 +110,6 @@ async def get_parsed_note_list(
         # Check on attachment
         if not skip_files and (msg_file := get_msg_file(message.reply_to_message)):
             files = [msg_file]
-
-    # No text
-    if not text and not files:
-        text = '‎ㅤ‎'
 
     # Preview
     if '%PREVIEW' in text:

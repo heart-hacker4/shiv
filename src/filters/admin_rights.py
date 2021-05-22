@@ -22,7 +22,7 @@ from aiogram.dispatcher.filters import Filter
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.utils.exceptions import BadRequest
 
-from src import BOT_ID, dp
+from src import BOT_ID
 from src.modules.utils.language import get_strings
 from src.modules.utils.user_details import check_admin_rights
 
@@ -135,7 +135,3 @@ class BotHasPermissions(UserRestricting):
             except BadRequest as error:
                 if error.args == 'Reply message not found':
                     return await message.answer(strings['bot_no_right:not_admin'])
-
-
-dp.filters_factory.bind(UserRestricting)
-dp.filters_factory.bind(BotHasPermissions)

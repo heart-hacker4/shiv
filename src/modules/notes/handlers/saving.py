@@ -3,7 +3,7 @@ from datetime import datetime
 
 from aiogram.types import Message
 
-from src.decorator import register
+from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import need_args_dec, get_arg
@@ -17,17 +17,19 @@ ADD_ALIAS_REGEXP = re.compile(r'\+((?:\w+|\|)+)')
 DEL_ALIAS_REGEXP = re.compile(r'-((?:\w+|\|)+)')
 
 
-@register(cmds=['save', 'setnote', 'savenote'], user_admin=True)
+@dp.message_handler(commands=['save', 'setnote', 'savenote'], user_admin=True)
+@dp.edited_message_handler(commands=['save', 'setnote', 'savenote'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
 @get_strings_dec('notes')
 async def save_note(message: Message, chat: dict, strings: dict):
     chat_id = chat['chat_id']
 
-    if type(data := await get_names_group(strings, message, chat_id)) is Message:
-        # Returned a error message, skip everything
-        return data
-    note_names, note_group = data
+    if type(msg_or_data := await get_names_group(strings, message, chat_id)) is Message:
+        # Returned a error message, skip everything, return a error message for cleannotes.
+        return msg_or_data
+
+    note_names, note_group = msg_or_data
 
     if type(note_data := await save_and_check(message, strings)) is Message:
         return note_data
@@ -35,14 +37,14 @@ async def save_note(message: Message, chat: dict, strings: dict):
     # Note description
     desc, note_data.text = get_note_description(note_data.text)
 
-    await upsert_note(
+    is_updated = (await upsert_note(
         chat_id,
         desc,
         note_names,
         message.from_user.id,
         note_data,
         note_group
-    )
+    ))[1]
 
     doc = build_saved_text(
         strings=strings,
@@ -50,13 +52,15 @@ async def save_note(message: Message, chat: dict, strings: dict):
         description=desc,
         note_names=note_names,
         note=note_data,
-        note_group=note_group or DEFAULT_GROUP_NAME
+        note_group=note_group or DEFAULT_GROUP_NAME,
+        is_updated=is_updated
     )
 
     await message.reply(str(doc))
 
 
-@register(cmds=['update', 'updatenote'], user_admin=True, )
+@dp.message_handler(commands=['update', 'updatenote'], user_admin=True)
+@dp.edited_message_handler(commands=['update', 'updatenote'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
 @get_strings_dec('notes')
@@ -64,22 +68,26 @@ async def update_note(message: Message, chat: dict, strings: dict) -> Message:
     chat_id = chat['chat_id']
 
     arg = get_arg(message)
-    if data := ADD_ALIAS_REGEXP.search(arg):
-        add_aliases = [x.removeprefix('#') for x in data.group(1).lower().split('|')]
+
+    # Add new aliases
+    if r := ADD_ALIAS_REGEXP.search(arg):
+        add_aliases = [x.removeprefix('#') for x in r.group(1).lower().split('|')]
         arg = ADD_ALIAS_REGEXP.sub('', arg)
     else:
         add_aliases = None
-    if data := DEL_ALIAS_REGEXP.search(arg):
-        del_aliases = [x.removeprefix('#') for x in data.group(1).lower().split('|')]
+
+    # Delete aliases
+    if r := DEL_ALIAS_REGEXP.search(arg):
+        del_aliases = [x.removeprefix('#') for x in r.group(1).lower().split('|')]
         arg = DEL_ALIAS_REGEXP.sub('', arg)
     else:
         del_aliases = None
 
-    if type(data := await get_names_group(strings, message, chat_id, arg=arg)) is Message:
-        # Returned a error message, skip everything
-        return data
+    if type(msg_or_data := await get_names_group(strings, message, chat_id, arg=arg)) is Message:
+        # Returned a error message, skip everything, return a error message for cleannotes.
+        return msg_or_data
 
-    note_names, new_group = data
+    note_names, new_group = msg_or_data
     note_name = note_names[0]
 
     if type(saved_note := await get_note_w_prediction(

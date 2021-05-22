@@ -13,6 +13,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 
+from functools import wraps
+
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from aiogram.utils.exceptions import Unauthorized
@@ -99,6 +101,7 @@ async def get_connected_chat(message, admin=False, only_groups=False, from_id=No
 
 def chat_connection(**dec_kwargs):
     def wrapped(func):
+        @wraps(func)
         async def wrapped_1(*args, **kwargs):
 
             message = args[0]

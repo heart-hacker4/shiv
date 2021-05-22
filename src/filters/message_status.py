@@ -19,8 +19,6 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
 
-from src import dp
-
 
 class NotForwarded(BoundFilter):
     key = 'not_forwarded'
@@ -65,9 +63,3 @@ class CmdNotMonospaced(BoundFilter):
         if message.entities and message.entities[0]['type'] == 'code' and message.entities[0]['offset'] < 1:
             return False
         return True
-
-
-dp.filters_factory.bind(NotForwarded)
-dp.filters_factory.bind(NoArgs)
-dp.filters_factory.bind(HasArgs)
-dp.filters_factory.bind(CmdNotMonospaced)

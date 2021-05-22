@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from functools import wraps
 from typing import Optional, List
 
 from aiogram.types import Message
@@ -87,6 +88,7 @@ def convert_timedelta(time):
 
 def need_args_dec(num=1):
     def wrapped(func):
+        @wraps(func)
         async def wrapped_1(*args, **kwargs):
             message = args[0]
             if len(message.text.split(" ")) > num:

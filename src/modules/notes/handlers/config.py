@@ -18,81 +18,83 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.decorator import register
+from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, ENABLE_KEYWORDS, DISABLE_KEYWORDS
-from src.services.mongo import engine
-from ..models import CleanNotes, PrivateNotes
+from ..db.config import (
+    get_pm_notes, save_pm_notes, del_pm_notes,
+    get_clean_notes, save_clean_notes, del_clean_notes
+)
 
 
-@register(cmds=['privatenotes', 'pmnotes'], no_args=False, is_admin=True)
-@chat_connection(admin=True)
+@dp.message_handler(commands=['privatenotes', 'pmnotes'], no_args=False, is_admin=True)
+@chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def private_notes_cmd_status(message, chat, strings):
-    if await engine.find_one(PrivateNotes, PrivateNotes.chat_id == chat['chat_id']):
+    if await get_pm_notes(chat['chat_id']):
         state = strings['enabled']
     else:
         state = strings['disabled']
     await message.reply(strings['current_state_info'].format(state=state, chat=chat['chat_title']))
 
 
-@register(cmds=['privatenotes', 'pmnotes'], has_args=True, is_admin=True)
-@chat_connection(admin=True)
+@dp.message_handler(commands=['privatenotes', 'pmnotes'], has_args=True, is_admin=True)
+@chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def private_notes_cmd(message, chat, strings):
     chat_id = chat['chat_id']
     chat_name = chat['chat_title']
     arg = get_arg(message).lower()
 
-    data = await engine.find_one(PrivateNotes, PrivateNotes.chat_id == chat_id)
+    data = await get_pm_notes(chat_id)
     if data and arg in ENABLE_KEYWORDS:
         return await message.reply(strings['already_enabled'].format(chat_name=chat_name))
     if not data and arg in DISABLE_KEYWORDS:
         return await message.reply(strings['already_disabled'].format(chat_name=chat_name))
 
     if arg in ENABLE_KEYWORDS:
-        await engine.save(PrivateNotes(chat_id=chat_id))
+        await save_pm_notes(chat_id)
         await message.reply(strings['enabled_successfully'].format(chat_name=chat_name))
     elif arg in DISABLE_KEYWORDS:
         if not data:
             return await message.reply(strings['not_enabled'])
 
-        await engine.delete(data)
+        await del_pm_notes(data)
         await message.reply(strings['disabled_successfully'].format(chat_name=chat_name))
     else:
         return await message.reply(strings['wrong_keyword'])
 
 
-@register(cmds='cleannotes', no_args=True, is_admin=True)
-@chat_connection(admin=True)
+@dp.message_handler(commands='cleannotes', no_args=True, is_admin=True)
+@chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def clean_notes_status(message, chat, strings):
-    if await engine.find_one(CleanNotes, CleanNotes.chat_id == chat['chat_id']):
+    if await get_clean_notes(chat['chat_id']):
         return await message.reply(strings['clean_notes_enabled'].format(chat_name=chat['chat_title']))
     else:
         return await message.reply(strings['clean_notes_disabled'].format(chat_name=chat['chat_title']))
 
 
-@register(cmds='cleannotes', has_args=True, is_admin=True)
-@chat_connection(admin=True)
+@dp.message_handler(commands='cleannotes', has_args=True, is_admin=True)
+@chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def clean_notes(message, chat, strings):
     chat_id = chat['chat_id']
     chat_name = chat['chat_title']
     arg = get_arg(message).lower()
 
-    data = await engine.find_one(CleanNotes, CleanNotes.chat_id == chat_id)
+    data = await get_clean_notes(chat_id)
     if data and arg in ENABLE_KEYWORDS:
         return await message.reply(strings['already_enabled_clean_notes'].format(chat_name=chat_name))
     if not data and arg in DISABLE_KEYWORDS:
         return await message.reply(strings['already_disabled_clean_notes'].format(chat_name=chat_name))
 
     if arg in ENABLE_KEYWORDS:
-        await engine.save(CleanNotes(chat_id=chat_id))
+        await save_clean_notes(chat_id)
         text = strings['clean_notes_enable'].format(chat_name=chat['chat_title'])
     elif arg in DISABLE_KEYWORDS:
-        await engine.delete(data)
+        await del_clean_notes(data)
         text = strings['clean_notes_disable'].format(chat_name=chat['chat_title'])
     else:
         return await message.reply(strings['wrong_keyword'])

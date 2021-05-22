@@ -1,54 +1,55 @@
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.decorator import register
+from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
-from src.modules.utils.message import get_arg, need_args_dec, get_args
-from src.services.mongo import db, engine
-from ..models import SavedNote
-from ..utils.get import get_similar_note
+from src.modules.utils.message import get_arg, need_args_dec
+from src.modules.utils.text import STFDoc, VList, HList, Section
+from ..db.notes import get_note, del_note, get_notes, del_all_notes
+from ..utils.get import get_similar_note, get_note_name
 
 
-@register(cmds=['clear', 'delnote'])
+@dp.message_handler(commands=['clear', 'delnote'], text_contains='|', is_admin=True)
 @chat_connection(admin=True)
 @need_args_dec()
 @get_strings_dec('notes')
 async def clear_multiple_notes(message, chat, strings):
-    # TODO: decorator
-    args = get_args(message)
-    if len(args) < 2 and '|' not in ''.join(args):
-        return
+    # TODO: add a filter for many arguments
+    notes_to_delete = get_arg(message).lower().split('|')
 
-    removed = ''
-    not_removed = ''
-    for note_name in note_names:
-        if note_name[0] == '#':
-            note_name = note_name[1:]
+    deleted = []
+    not_deleted = []
 
-        if not (note := await db.notes.find_one({'chat_id': chat['chat_id'], 'names': {'$in': [note_name]}})):
-            if len(note_names) <= 1:
-                text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
-                if alleged_note_name := await get_similar_note(chat['chat_id'], note_name):
-                    text += strings['u_mean'].format(note_name=alleged_note_name)
-                await message.reply(text)
-                return
-            else:
-                not_removed += ' #' + note_name
-                continue
+    for raw_note_name in notes_to_delete:
+        note_name = get_note_name(raw_note_name)
 
-        await db.notes.delete_one({'_id': note['_id']})
-        removed += ' #' + note_name
+        if not (note := await get_note(note_name, chat['chat_id'])):
+            not_deleted.append(note_name)
+            continue
 
-    if len(note_names) > 1:
-        text = strings['note_removed_multiple'].format(chat_name=chat['chat_title'], removed=removed)
-        if not_removed:
-            text += strings['not_removed_multiple'].format(not_removed=not_removed)
-        await message.reply(text)
-    else:
-        await message.reply(strings['note_removed'].format(note_name=note_name, chat_name=chat['chat_title']))
+        await del_note(note)
+        deleted.append(note)
+
+    sec = Section(title=strings['note_removed_multiple_title'].format(chat_name=chat['chat_title']))
+
+    if deleted:
+        sec += Section(
+            VList(*[HList(*x.names, prefix='#') for x in deleted]), title=strings['note_removed_multiple_removed'],
+            title_underline=False
+        )
+    if not_deleted:
+        sec += Section(
+            VList(*[f'#{x}' for x in not_deleted]), title=strings['note_removed_multiple_not_removed'],
+            title_underline=False
+        )
+
+    if not deleted and not not_deleted:
+        return await message.reply(strings['notes_wasnt_touched'])
+
+    await message.reply(str(STFDoc(sec)))
 
 
-@register(cmds=['clear', 'delnote'])
+@dp.message_handler(commands=['clear', 'delnote'], is_admin=True)
 @chat_connection(admin=True)
 @need_args_dec()
 @get_strings_dec('notes')
@@ -56,24 +57,22 @@ async def clear_note(message, chat, strings):
     chat_id = chat['chat_id']
     note_name = get_arg(message).lower().removeprefix('#')
 
-    if not (
-            note := await engine.find_one(SavedNote,
-                                          (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
+    if not (note := await get_note(note_name, chat_id)):
         text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
         if alleged_note_name := await get_similar_note(chat['chat_id'], note_name):
             text += strings['u_mean'].format(note_name=alleged_note_name)
         return await message.reply(text)
 
-    await engine.delete(note)
+    await del_note(note)
     await message.reply(strings['note_removed'].format(note_name=note_name, chat_name=chat['chat_title']))
 
 
-@register(cmds='clearall')
+@dp.message_handler(commands='clearall', is_admin=True)
 @chat_connection(admin=True)
 @get_strings_dec('notes')
 async def clear_all_notes(message, chat, strings):
     # Ensure notes count
-    if not await db.notes.find_one({'chat_id': chat['chat_id']}):
+    if not await get_notes(chat['chat_id']):
         await message.reply(strings['notelist_no_notes'].format(chat_title=chat['chat_title']))
         return
 
@@ -84,11 +83,11 @@ async def clear_all_notes(message, chat, strings):
     await message.reply(text, reply_markup=buttons)
 
 
-@register(regexp='clean_all_notes_cb', f='cb', is_admin=True)
+@dp.callback_query_handler(text='clean_all_notes_cb', is_admin=True)
 @chat_connection(admin=True)
 @get_strings_dec('notes')
 async def clear_all_notes_cb(event, chat, strings):
-    num = (await db.notes.delete_many({'chat_id': chat['chat_id']})).deleted_count
+    num = (await del_all_notes(chat['chat_id'])).deleted_count
 
     text = strings['clearall_done'].format(num=num, chat_name=chat['chat_title'])
     await event.message.edit_text(text)

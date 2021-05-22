@@ -19,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import suppress
+from datetime import datetime, timedelta
 
 from aiogram.utils.exceptions import MessageNotModified
 from pymongo import UpdateOne
@@ -26,6 +27,7 @@ from pymongo import UpdateOne
 from src.modules.utils.language import get_string
 from src.modules.utils.text import KeyValue, Code
 from src.services.mongo import db, engine
+from ..db.notes import count_of_filters
 from ..models import SavedNote, PrivateNotes, CleanNotes, ExportModel, MAX_NOTES_PER_CHAT
 from ..utils.get import get_note
 from ..utils.saving import get_notes_count
@@ -34,11 +36,21 @@ __data_model__ = ExportModel
 
 
 async def __usage_count__():
-    return KeyValue('Total notes', Code(await db.notes.count_documents({})))
+    return KeyValue('Total notes', Code(await count_of_filters({})))
 
 
-async def __detailed_stats__():
-    pass
+async def __detailed_stats__() -> tuple:
+    last_48h_id = {'$gt': datetime.now() - timedelta(days=2)}
+
+    return (
+        KeyValue('Total notes', Code(await count_of_filters({}))),
+        KeyValue('Old notes (compatibility mode)', Code(await count_of_filters({+SavedNote.note.old: True}))),
+        KeyValue('New notes', Code(await count_of_filters({+SavedNote.note.old: False}))),
+        KeyValue('Notes created in the last 48 hours',
+                 Code(await count_of_filters({+SavedNote.created_date: last_48h_id}))),
+        KeyValue('Notes edited in the last 48 hours',
+                 Code(await count_of_filters({+SavedNote.edited_date: last_48h_id}))),
+    )
 
 
 async def __export_data__(chat_id) -> ExportModel:

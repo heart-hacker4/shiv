@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import suppress
+from functools import wraps
 
 from src.modules.utils.user_details import is_user_admin
 from src.services.mongo import db
@@ -32,6 +33,7 @@ def disableable_dec(command):
         DISABLABLE_COMMANDS.append(command)
 
     def wrapped(func):
+        @wraps(func)
         async def wrapped_1(*args, **kwargs):
             message = args[0]
 

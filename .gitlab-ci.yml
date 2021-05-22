@@ -17,7 +17,7 @@ python:flake8:
     - cd /builds/SophieBot/sophie/
     - python3 -m flake8 sophie_bot --max-line-length=120 --ignore=E203,E231,E701 | tee flake8-report.txt
   artifacts:
-    paths: [flake8-report.txt]
+    paths: [ flake8-report.txt ]
 
 
 docker:deploy:

@@ -18,7 +18,6 @@
 
 from aiogram.dispatcher.filters import BoundFilter
 
-from src import dp
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.user_details import is_user_admin
 
@@ -42,6 +41,3 @@ class IsAdmin(BoundFilter):
             await task(strings['u_not_admin'])
             return False
         return True
-
-
-dp.filters_factory.bind(IsAdmin)

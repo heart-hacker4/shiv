@@ -19,8 +19,6 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
 
-from src import dp
-
 
 class OnlyPM(BoundFilter):
     key = 'only_pm'
@@ -42,7 +40,3 @@ class OnlyGroups(BoundFilter):
     async def check(self, message: types.Message):
         if not message.from_user.id == message.chat.id:
             return True
-
-
-dp.filters_factory.bind(OnlyPM)
-dp.filters_factory.bind(OnlyGroups)

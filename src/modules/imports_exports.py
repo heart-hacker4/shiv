@@ -48,7 +48,7 @@ class ImportFileWait(StatesGroup):
 
 
 @register(cmds='export', user_admin=True)
-@chat_connection(admin=True, only_groups=True)
+@chat_connection(admin=True)
 @get_strings_dec('imports_exports')
 async def export_chat_data(message, chat, strings):
     chat_id = chat['chat_id']
@@ -67,7 +67,7 @@ async def export_chat_data(message, chat, strings):
     for module in [m for m in LOADED_MODULES if hasattr(m, '__export_data__')]:
         await asyncio.sleep(0.2)
 
-        module_name = module.__name__.replace('sophie_bot.modules.', '')
+        module_name = module.__name__.split('.')[-1]
         module_data = await module.__export_data__(chat_id)
         if module_data:
             modules[module_name] = module_data.dict(exclude={'id'})

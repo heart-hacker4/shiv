@@ -16,9 +16,9 @@ BUTTONS_TEXT_REGEXP = re.compile(
     # [Button name](type:argument:same)
     r'\[(.+?)]\((?:button|btn)?(?!http(?:s))(\w+|#)(?:(?:[:=])?(?:\s)?(?://)?(.*?)|)[:=]?(?:(?:\s)?(same|\^))?\)(?:\n)?'
 )
-BUTTON_CALLBACK_PATTERN = "{prefix}:{action}:{argument}:{chat_id}"
+BUTTON_CALLBACK_PATTERN = "{prefix}-{action}-{argument}-{chat_id}"
 BUTTONS_CALLBACK_REGEXP = re.compile(
-    r'.*:(.*):(.*):.*'
+    r'(.*?)-(.*?)-(.*?)-(.*)'
 )
 
 
@@ -125,8 +125,8 @@ class ButtonFabric(List[List[DBButton]]):
                         continue
 
                     data: Match[AnyStr]
-                    action = data[1]
-                    argument = data[2]
+                    action = data[2]
+                    argument = data[3]
                 elif button.url:
                     # A simple url button
                     action = 'url'
@@ -173,12 +173,12 @@ class ButtonFabric(List[List[DBButton]]):
             chat_id=chat_id
         )
 
-    def unparse_button(self, button: DBButton, is_pm: bool, chat_id: ChatId) -> (str, RealButtonTypes, str):
+    def unparse_button(self, button: dict, is_pm: bool, chat_id: ChatId) -> (str, RealButtonTypes, str):
         options = BUTTONS[button['action']]
         callback_data = self.get_callback(button, options, chat_id)
 
         if options.type is DefinedButtonType.url:
-            return button.name, RealButtonTypes.url, button.argument
+            return button['name'], RealButtonTypes.url, button['argument']
 
         elif options.type is DefinedButtonType.callback:
             return self.get_callback_button(button)

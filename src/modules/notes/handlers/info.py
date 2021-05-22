@@ -20,30 +20,31 @@
 
 import re
 
-from aiogram.dispatcher.filters.builtin import CommandStart
+from aiogram.types import Message
 from babel.dates import format_datetime
 
-from src.decorator import register
-from src.modules.utils.connections import chat_connection, set_connected_command
+from src import dp
+from src.modules.utils.connections import chat_connection
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
 from src.modules.utils.text import STFDoc, Section, KeyValue, Code, Italic, HList
 from src.modules.utils.user_details import get_user_link
-from src.services.mongo import db, engine
+from src.services.mongo import engine
+from ..db.notes import get_note, get_notes
 from ..models import SavedNote, DEFAULT_GROUP_NAME
 from ..utils.clean_notes import clean_notes
-from ..utils.get import get_similar_note, get_notes_sections, find_note, get_note_name, get_notes
+from ..utils.get import get_similar_note, get_notes_sections, get_note_name
 
 
-@register(regexp=r'^#([\w-]+)')
+@dp.message_handler(regexp=re.compile(r'^#([\w-]+)'))
 @disableable_dec('get')
 @chat_connection(command='get')
 @get_strings_dec('notes')
 @clean_notes
-async def get_group_hashtag(message, chat, strings, regexp=None):
+async def get_group_hashtag(message: Message, chat, strings, regexp: re.Match = None):
     chat_id = chat['chat_id']
-    group_name = message.text.split(' ', 1)[0][1:].lower()
+    group_name = regexp.group(1).lower()
 
     if group_name == DEFAULT_GROUP_NAME:
         group_name = None
@@ -60,12 +61,12 @@ async def get_group_hashtag(message, chat, strings, regexp=None):
     return await message.reply(str(doc))
 
 
-@register(cmds=['notes', 'saved', 'notelist', 'noteslist'])
+@dp.message_handler(commands=['notes', 'saved', 'notelist', 'noteslist'])
 @disableable_dec('notes')
 @chat_connection(command='notes')
 @get_strings_dec('notes')
 @clean_notes
-async def get_notes_list_cmd(message, chat, strings):
+async def get_notes_list_cmd(message: Message, chat, strings):
     arg = get_arg(message)
 
     # Show hidden more
@@ -88,7 +89,7 @@ async def get_notes_list_cmd(message, chat, strings):
     return await message.reply(str(doc))
 
 
-@register(cmds='search')
+@dp.message_handler(commands='search')
 @disableable_dec('search')
 @chat_connection()
 @get_strings_dec('notes')
@@ -111,28 +112,16 @@ async def search_in_note(message, chat, strings):
         ))))
 
 
-@register(CommandStart(re.compile('notes')))
-@get_strings_dec('notes')
-async def private_notes_func(message, strings):
-    args = message.get_args().split('_')
-    chat_id = args[1]
-    keyword = args[2] if args[2] != 'None' else None
-    await set_connected_command(message.from_user.id, int(chat_id), ['get', 'notes'])
-    chat = (await db.chat_list.find_one({'chat_id': int(chat_id)}))
-    msg = await message.answer(strings['privatenotes_notif'].format(chat=chat['chat_title']))
-    await get_notes_section(msg, chat, keyword=keyword)
-
-
-@register(cmds=['noteinfo', 'notedata'], user_admin=True)
+@dp.message_handler(commands=['noteinfo', 'notedata'], user_admin=True)
 @chat_connection()
 @need_args_dec()
 @get_strings_dec('notes')
 @clean_notes
 async def note_info(message, chat, strings):
     chat_id = chat['chat_id']
-    arg = get_arg(message).lower()
+    note_name = get_note_name(get_arg(message))
 
-    if not (note := await find_note(arg, chat_id)):
+    if not (note := await get_note(note_name, chat_id)):
         text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
         if alleged_note_name := await get_similar_note(chat['chat_id'], get_note_name(arg)):
             text += strings['u_mean'].format(note_name=alleged_note_name)

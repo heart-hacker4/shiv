@@ -29,8 +29,8 @@ from .utils.user_details import is_user_admin
 
 @register(cmds='cancel', state='*', allow_kwargs=True)
 async def cancel_handle(message, state, **kwargs):
+    await message.reply(f'Cancelled.')
     await state.finish()
-    await message.reply('Cancelled.')
 
 
 async def delmsg_filter_handle(message, chat, data):

@@ -50,7 +50,7 @@ async def send_new_note(
     if not raw:
         text = random_parser(text)
         if message:
-            text = await vars_parser(
+            text = vars_parser(
                 text,
                 message,
                 user or message.from_user,
@@ -177,7 +177,7 @@ async def send_old_note(
             return await bot.send_message(send_id, 'I found this note invalid! Please update it (read Wiki).')
 
         if message:
-            text = await vars_parser(
+            text = vars_parser(
                 text,
                 message,
                 user or message.from_user,

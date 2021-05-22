@@ -18,30 +18,18 @@
 
 import os
 import time
-from importlib import import_module
 
 from aiogram import types
 from aiogram.dispatcher.handler import SkipHandler
 
 from src import BOT_USERNAME, dp
 # from sophie_bot.modules.error import parse_update
-from src.utils.filters import ALL_FILTERS
 from src.utils.logger import log
 
 DEBUG_MODE = os.getenv('DEBUG_MODE', False)
 ALLOW_FORWARDS_COMMANDS = os.getenv("ALLOW_FORWARDS_COMMANDS", False)
 ALLOW_COMMANDS_FROM_EXC = os.getenv("ALLOW_COMMANDS_WITH_!", False)
 CMD_NOT_MONO = os.getenv("DISALLOW_MONO_CMDS", True)
-
-REGISTRED_COMMANDS = []
-COMMANDS_ALIASES = {}
-
-# Import filters
-log.info("Filters to load: %s", str(ALL_FILTERS))
-for module_name in ALL_FILTERS:
-    log.debug("Importing " + module_name)
-    imported_module = import_module("src.utils.filters." + module_name)
-log.info("Filters loaded!")
 
 
 def register(*args, cmds=None, f=None, allow_edited=True, only_edited=False, allow_kwargs=False, **kwargs):
@@ -60,16 +48,9 @@ def register(*args, cmds=None, f=None, allow_edited=True, only_edited=False, all
             kwargs['cmd_not_mono'] = True
 
         for idx, cmd in enumerate(cmds):
-            if cmd in REGISTRED_COMMANDS:
-                log.warn(f'Duplication of /{cmd} command')
-            REGISTRED_COMMANDS.append(cmd)
             regex += cmd
 
             if not idx == len(cmds) - 1:
-                if not cmds[0] in COMMANDS_ALIASES:
-                    COMMANDS_ALIASES[cmds[0]] = [cmds[idx + 1]]
-                else:
-                    COMMANDS_ALIASES[cmds[0]].append(cmds[idx + 1])
                 regex += "|"
 
         if 'disable_args' in kwargs:

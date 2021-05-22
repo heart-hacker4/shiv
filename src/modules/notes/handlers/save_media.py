@@ -1,5 +1,5 @@
 import asyncio
-from typing import List
+from typing import List, Dict, Any
 
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, ContentType
@@ -7,15 +7,14 @@ from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardBu
 from aiogram.utils.callback_data import CallbackData
 from bson import ObjectId
 
-from src.decorator import register
+from src import dp
 from src.models.notes import NoteFile, CAPTION_LENGTH
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import need_args_dec
 from src.modules.utils.notes_parser.encode import get_msg_file
 from src.modules.utils.notes_parser.encode import get_parsed_note_list
-from src.services.mongo import engine
-from ..models import SavedNote
+from ..db.notes import get_note_by_id, save_note
 from ..utils.saving import get_note_description, get_names_group, upsert_note, build_saved_text
 
 MEDIA_CONTENT_TYPES = [
@@ -34,11 +33,11 @@ note_media_done = CallbackData('note_media_done_cb', 'note_id')
 SAVE_MEDIA_GROUP_LOCK = asyncio.Lock()
 
 
-@register(cmds=['savemedia', 'savegallery', 'setmedia', 'setgallery'], user_admin=True, allow_kwargs=True)
+@dp.message_handler(commands=['savemedia', 'savegallery', 'setmedia', 'setgallery'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
 @get_strings_dec('notes')
-async def save_note_gallery(message: Message, chat: dict, strings: dict, state=None, **kwargs) -> Message:
+async def save_note_gallery(message: Message, chat: dict, strings: dict, state=None) -> Message:
     chat_id = chat['chat_id']
 
     if type(data := await get_names_group(strings, message, chat_id)) is Message:
@@ -81,9 +80,10 @@ async def save_note_gallery(message: Message, chat: dict, strings: dict, state=N
     )
 
 
-@register(state=SaveNoteMedia.work, content_types=MEDIA_CONTENT_TYPES, allow_edited=False, allow_kwargs=True)
+@dp.message_handler(state=SaveNoteMedia.work, content_types=MEDIA_CONTENT_TYPES)
+@dp.edited_message_handler(state=SaveNoteMedia.work, content_types=MEDIA_CONTENT_TYPES)
 @get_strings_dec('notes')
-async def save_file_group_worker(message: Message, strings: dict, state=None, **kwargs):
+async def save_file_group_worker(message: Message, strings: dict, state=None):
     file = get_msg_file(message)
 
     async with state.proxy() as proxy:
@@ -107,9 +107,9 @@ async def save_file_group_worker(message: Message, strings: dict, state=None, **
             proxy['files'].append(file_data.dict())
 
 
-@register(state=SaveNoteMedia.work, content_types=ContentType.TEXT, allow_kwargs=True)
+@dp.message_handler(state=SaveNoteMedia.work, content_types=ContentType.TEXT)
 @get_strings_dec('notes')
-async def save_caption_worker(message: Message, strings: dict, state=None, **kwargs):
+async def save_caption_worker(message: Message, strings: dict, state=None):
     """Adds/updates a caption of last file by a simple text message"""
     async with state.proxy() as proxy:
         files: List[dict] = proxy.get('files', [])
@@ -126,23 +126,20 @@ async def save_caption_worker(message: Message, strings: dict, state=None, **kwa
         files[-1]['caption'] = new_caption
 
 
-@register(note_media_done.filter(), state=SaveNoteMedia.work, f='cb', is_admin=True, allow_kwargs=True)
+@dp.callback_query_handler(note_media_done.filter(), state=SaveNoteMedia.work, is_admin=True)
 @chat_connection(admin=True)
 @get_strings_dec('notes')
-async def clear_all_notes_cb(event, chat, strings, state=None, callback_data=None, **kwargs):
+async def save_media_group_cb(event, chat, strings, state=None, callback_data=None):
     async with state.proxy() as proxy:
-        files: List[str] = proxy['files']
-        file_type: str = proxy['file_type']
+        files: List[Dict[str, Any]] = proxy['files']
 
     await state.finish()
 
-    if not (saved_note := await engine.find_one(
-            SavedNote, (SavedNote.chat_id == chat['chat_id']) & (SavedNote.id == ObjectId(callback_data['note_id']))
-    )):
+    if not (saved_note := await get_note_by_id(ObjectId(callback_data['note_id']), chat['chat_id'])):
         return
 
-    saved_note.note.files = [NoteFile(**x) for x in files]
-    await engine.save(saved_note)
+    saved_note.note.files = files
+    await save_note(saved_note)
 
     doc = build_saved_text(
         strings=strings,

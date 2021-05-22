@@ -63,6 +63,7 @@ class BaseNote(EmbeddedModel):
     def files_count(cls, v):
         if v and len(v) > 10:
             raise ValueError('Media group can contain only 10 files at max!')
+        return v
 
     # @validator('old')
     # def old_markdown(cls, v, values):

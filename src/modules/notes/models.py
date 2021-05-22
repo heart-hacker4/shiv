@@ -18,6 +18,8 @@ RESTRICTED_SYMBOLS = [
     '\n', '+', '-'
 ]
 
+HIDDEN_GROUPS = ['hidden', 'admin']
+
 
 class SavedNote(Model):
     names: List[str]
@@ -61,6 +63,13 @@ class SavedNote(Model):
         return v
 
 
+class ExportedNote(Model):
+    names: List[str]
+    group: Optional[str]
+    description: Optional[str]
+    note: BaseNote
+
+
 class CleanNotes(Model):
     chat_id: ChatId
     msgs: Optional[List[int]]
@@ -71,7 +80,7 @@ class PrivateNotes(Model):
 
 
 class ExportModel(Model):
-    notes: List[SavedNote]
+    notes: List[ExportedNote]
     clean_notes: bool
     private_notes: bool
 

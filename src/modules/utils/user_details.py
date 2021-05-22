@@ -28,9 +28,11 @@ from aiogram.utils.exceptions import BadRequest, Unauthorized, ChatNotFound
 from telethon.tl.functions.users import GetFullUserRequest
 
 from src import OPERATORS, bot
+from src.models.chat import SavedChat
 from src.services.mongo import db
 from src.services.redis import bredis
 from src.services.telethon import tbot
+from src.types.chat import ChatId
 from .language import get_string
 from .message import get_arg
 
@@ -348,6 +350,16 @@ async def get_users_and_text(message):
         return users, args[1]
     else:
         return users, ''
+
+
+async def get_chat(chat_id: ChatId):
+    chat_data = await db.chat_list.find_one({'chat_id': chat_id})
+    return SavedChat(
+        id=chat_data['chat_id'],
+        nick=chat_data['chat_nick'],
+        title=chat_data['chat_title'],
+        type=chat_data['type']
+    )
 
 
 def get_user_and_text_dec(**dec_kwargs):

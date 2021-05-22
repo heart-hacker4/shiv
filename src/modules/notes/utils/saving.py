@@ -116,9 +116,9 @@ async def upsert_note(
         edited_user: ChatId,
         note_data: BaseNote,
         note_group: str
-) -> (BaseNote, str):
+) -> (BaseNote, bool):
     if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note_names))):
-        status = 'updated'
+        is_updated = True
         note.names = note_names
         note.description = description
         note.edited_date = datetime.now()
@@ -126,7 +126,7 @@ async def upsert_note(
         note.note = note_data
         note.group = note_group
     else:
-        status = 'saved'
+        is_updated = False
         note = SavedNote(
             names=note_names,
             description=description,
@@ -139,7 +139,7 @@ async def upsert_note(
 
     # await
 
-    return await engine.save(note), status
+    return await engine.save(note), is_updated
 
 
 def build_saved_text(
@@ -148,7 +148,8 @@ def build_saved_text(
         description: str,
         note_names: List[str],
         note: BaseNote,
-        note_group: str
+        note_group: str,
+        is_updated: bool = False
 ) -> STFDoc:
     # Build reply text
     doc = STFDoc()
@@ -157,7 +158,7 @@ def build_saved_text(
         KeyValue(strings['names'], HList(*note_names, prefix='#')),
         KeyValue(strings['note_info_desc'], description or strings['none_description']),
         KeyValue(strings['note_info_preview'], strings['preview_yes'] if note.preview else strings['preview_no']),
-        title=strings['saving_title'].format(chat_name=chat_name)
+        title=(strings['updating_title'] if is_updated else strings['saving_title']).format(chat_name=chat_name)
     )
     # if len(files_count := note.files) > 1:
     #    sec += KeyValue(strings['note_info_multiple_group'], files_count)

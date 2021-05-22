@@ -34,6 +34,9 @@ if os.getenv('DEBUG_MODE', False):
 LOAD = os.getenv("LOAD", "").split(',')
 DONT_LOAD = os.getenv("DONT_LOAD", "").split(',')
 
+# Import inbuilt filters
+import_module("src.filters")
+
 if os.getenv('LOAD_MODULES', True):
     # FIXME: LOAD[0]
     if LOAD and LOAD[0]:
@@ -56,7 +59,7 @@ loop = asyncio.get_event_loop()
 
 # Import misc stuff
 if not os.getenv('DEBUG_MODE', False):
-    import_module("sophie_bot.utils.sentry")
+    import_module("src.utils.sentry")
 
 
 async def before_srv_task(loop):

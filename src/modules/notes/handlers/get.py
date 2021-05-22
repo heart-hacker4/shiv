@@ -17,48 +17,49 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import re
+from typing import Optional, Tuple
 
-from src.decorator import register
+from aiogram.dispatcher.handler import SkipHandler
+from aiogram.types import Message
+
+from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
+from src.modules.utils.notes_parser.send import send_note
 from src.modules.utils.user_details import is_user_admin
-from src.services.mongo import engine
-from ..models import SavedNote
+from ..db.notes import get_note
 from ..utils.clean_notes import clean_notes
-from ..utils.get import get_note, get_similar_note
+from ..utils.get import get_similar_note, get_note_name
 
 RESTRICTED_SYMBOLS_IN_NOTENAMES = [':', '**', '__', '`', '"', '[', ']', "'", '$', '||', '^']
 
 
-@register(cmds='get')
+@dp.message_handler(commands='get')
 @disableable_dec('get')
 @need_args_dec()
-@chat_connection(command='get')
+@chat_connection()
 @get_strings_dec('notes')
 @clean_notes
-async def get_note_cmd(message, chat, strings):
+async def get_note_cmd(message: Message, chat, strings) -> Optional[Tuple[Message]]:
     chat_id = chat['chat_id']
     chat_name = chat['chat_title']
     keep = False
 
-    note_name = get_arg(message).lower()
-    if note_name[0] == '#':
-        note_name = note_name[1:]
-    if note_name[-1] == '!':
+    if (note_name := get_note_name(get_arg(message)))[-1] == '!':
         keep = True
         note_name[:-1]
 
     if 'reply_to_message' in message:
-        rpl_id = message.reply_to_message.message_id
+        reply_to = message.reply_to_message.message_id
         user = message.reply_to_message.from_user
     else:
-        rpl_id = message.message_id
+        reply_to = message.message_id
         user = message.from_user
 
-    if not (
-    note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
+    if not (note := await get_note(note_name, chat_id)):
         text = strings['cant_find_note'].format(chat_name=chat_name)
         if alleged_note_name := await get_similar_note(chat_id, note_name):
             text += strings['u_mean'].format(note_name=alleged_note_name)
@@ -75,50 +76,50 @@ async def get_note_cmd(message, chat, strings):
         if not keep:
             keep = arg2 in ('keep', 'sway')
 
-    note_data = await get_note(
-        message,
-        note.note,
-        reply_to=rpl_id,
-        raw=raw,
-        user=user
+    note_data = await send_note(
+        send_id=message.chat.id,
+        note=note.note,
+        reply_to=reply_to,
+        message=message,
+        user=message.from_user,
+        is_pm=message.chat.type == 'private',
+        raw=raw
     )
 
-    return False if keep else note_data
+    return None if keep else note_data
 
 
-@register(regexp=r'^#([\w-]+)')
+@dp.message_handler(regexp=re.compile(r'^#([\w-]+)(!)?'))
 @disableable_dec('get')
 @chat_connection(command='get')
 @clean_notes
-async def get_note_hashtag(message, chat, regexp=None):
+async def get_note_hashtag(message, chat, regexp: re.Match = None) -> Optional[Tuple[Message]]:
+    """Get note by hashname"""
     chat_id = chat['chat_id']
-    note_name = message.text.split(' ', 1)[0][1:].lower()
+    note_name = regexp.group(1).lower()
+    keep = bool(regexp.group(2))
 
-    if note_name[-1] == '!':
-        keep = True
-        note_name = note_name[:-1]
-    else:
-        keep = False
-
-    if not (
-    note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name])))):
-        return
+    if not (note := await get_note(note_name, chat_id)):
+        # Skip handler to match also group note hashtag
+        raise SkipHandler
 
     if 'reply_to_message' in message:
-        rpl_id = message.reply_to_message.message_id
+        reply_to = message.reply_to_message.message_id
         user = message.reply_to_message.from_user
     else:
-        rpl_id = message.message_id
+        reply_to = message.message_id
         user = message.from_user
 
     if note.group == 'admin' and not await is_user_admin(chat_id, user.id):
         return
 
-    note_data = await get_note(
-        message,
-        note.note,
-        reply_to=rpl_id,
-        user=user
+    note_data = await send_note(
+        send_id=message.chat.id,
+        note=note.note,
+        reply_to=reply_to,
+        message=message,
+        user=message.from_user,
+        is_pm=message.chat.type == 'private'
     )
 
-    return False if keep else note_data
+    return None if keep else note_data

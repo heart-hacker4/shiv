@@ -5,12 +5,12 @@ from typing import Optional
 
 from aiogram.types import Message, User
 
-from src.modules.utils.user_details import get_user_link
+# from src.modules.utils.user_details import get_user_link
 
 RANDOM_REGEXP = re.compile(r'{([^{}]+)}')
 
 
-async def vars_parser(
+def vars_parser(
         text: str,
         message: Message,
         user: User,
@@ -50,8 +50,7 @@ async def vars_parser(
         .replace('{chatnick}', str(message.chat.username or chat_name))
 
     if not no_parse:
-        mention = await get_user_link(user_id, md=md)
-        return text.replace('{mention}', mention)
+        return text.replace('{mention}', user.get_mention(as_html=not md))
 
     return text
 

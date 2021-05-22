@@ -12,6 +12,7 @@ STRINGS:
 
     # /save
     saving_title: "Note saved in <b>{chat_name}</b>"
+    updating_title: "Note updated in <b>{chat_name}</b>"
     status: "Status"
     saved: "Saved"
     updated: "Updated"
@@ -62,13 +63,14 @@ STRINGS:
     notelist_header: "Notes in {chat_name}"
     notes_in_private: "Click below button to get notes list."
     search_pattern: "Search pattern"
+    get_tip: "Use /get (note name) to view the note"
 
     # /clear
     note_removed: "Note <code>#{note_name}</code> removed in <b>{chat_name}</b>!"
-    note_removed_multiple: |
-      Multiple notes removing in <b>{chat_name}</b>
-      <b>Removed:</b><code>{removed}</code>
-    not_removed_multiple: "<b>Not removed:</b><code>{not_removed}</code>"
+    note_removed_multiple_title: "Multiple notes removing in <b>{chat_name}</b>"
+    note_removed_multiple_removed: "Removed"
+    note_removed_multiple_not_removed: "Not removed"
+    notes_wasnt_touched: "No notes was touched!"
 
     # /clearall
     clear_all_text: "This will remove all notes from {chat_name}. Are you sure?"
@@ -148,6 +150,10 @@ STRINGS:
 
     #delmsg_no_arg: "deletemsg button can contain only 'admin' or 'user' argument!"
     #bot_msg: "I'm sorry, I am not notelist_headerable to get this message, probably this a other bot's message, so I can't save it."
+
+    # Buttons
+    disconnect_btn: "↩️ Disconnect from the chat"
+    chat_doesnt_exists: "Chat you trying to connect via PM notes isn't exits! If you are unsure what to do ask in the @SophieSupport chat."
   filters:
     no_filters_found: "No filters was found in <b>{chat_name}</b>!"
 
@@ -534,7 +540,7 @@ STRINGS:
     see_translators: 👥 See translators
     back: Back
   connections:
-    pm_connected: "Your PM has been successfully connected to <b>{chat_name}</b>!"
+    pm_connected: "Your PM has been successfully connected to <b>{chat_name}</b>! To disconnect use /disconnect command."
     connected_pm_to_me: "Your PM has been successfully connected to <b>{chat_name}</b>! Please pm me to start using connection."
     chat_connection_tlt: "<b>Chat connection</b>\n"
     connected_chat: |

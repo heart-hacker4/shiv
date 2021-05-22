@@ -22,6 +22,21 @@ class OPFunctions:
     async def stats(message: Message, arg_raw: str = '') -> Message:
         from src import SOPHIE_VERSION
 
+        # Detailed stats
+        if arg_raw := arg_raw.lower():
+            try:
+                module = next(x for x in LOADED_MODULES if arg_raw in x.__name__)
+            except StopIteration:
+                return await message.reply(f'Module not found - {arg_raw}!')
+
+            if not hasattr(module, '__detailed_stats__'):
+                return await message.reply(f'__detailed_stats__ not found in - {arg_raw}!')
+
+            return await message.reply(str(
+                STFDoc(Section(*(await module.__detailed_stats__()), title=f'Detailed stats of {arg_raw}'))
+            ))
+
+        # Normal stats
         if 'fsTotalSize' in (local_db := await db.command("dbstats")):
             mongo_used = local_db['dataSize']
             mongo_free = local_db['fsTotalSize'] - local_db['fsUsedSize']

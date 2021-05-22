@@ -22,41 +22,26 @@ import difflib
 from typing import List, Optional, Union
 
 from aiogram.types import Message
-from odmantic import query
 
-from src.models.notes import BaseNote
-from src.modules.utils.message import get_arg
-from src.modules.utils.notes_parser.send import send_note
 from src.modules.utils.text import Section, KeyValue, VList, HList
-from src.services.mongo import db, engine
 from src.types.chat import ChatId
-from ..models import SavedNote
+from ..db.notes import get_notes, get_note
+from ..models import SavedNote, DEFAULT_GROUP_NAME, HIDDEN_GROUPS
 
 
 def get_note_name(arg: str) -> str:
     if arg[0] == '#':
         arg = arg[1:]
 
-    return arg
-
-
-async def find_note(arg: str, chat_id: int) -> Optional[SavedNote]:
-    note_name = get_note_name(arg)
-
-    if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_([note_name]))):
-        return note
-
-    return None
+    return arg.lower()
 
 
 async def get_note_w_prediction(
         message: Message, arg: str, chat_id: ChatId, chat_name: str, strings: dict
 ) -> Union[Message, SavedNote]:
-    note_name = get_arg(message).lower()
-    if note_name[0] == '#':
-        note_name = note_name[1:]
+    note_name = get_note_name(arg)
 
-    if not (note := await find_note(arg, chat_id)):
+    if not (note := await get_note(chat_id, note_name)):
         text = strings['cant_find_note'].format(chat_name=chat_name)
         if alleged_note_name := await get_similar_note(chat_id, note_name):
             text += strings['u_mean'].format(note_name=alleged_note_name)
@@ -67,7 +52,7 @@ async def get_note_w_prediction(
 
 async def get_similar_note(chat_id, note_name):
     all_notes = []
-    async for note in db.saved_note.find({'chat_id': chat_id}):
+    async for note in get_notes(chat_id):
         all_notes.extend(note['names'])
 
     if len(all_notes) > 0:
@@ -78,40 +63,12 @@ async def get_similar_note(chat_id, note_name):
     return None
 
 
-async def get_note(message, note: BaseNote,
-                   chat_id=None, send_id=None, reply_to=None, raw: bool = False, event=None, user=None):
-    if not chat_id:
-        chat_id = message.chat.id
-
-    if not send_id:
-        send_id = message.chat.id
-
-    if reply_to is False:
-        reply_to = None
-    elif not reply_to:
-        reply_to = message.message_id
-
-    return await send_note(send_id, note, reply_to=reply_to, message=message, raw=raw)
-
-
-async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
-    return await engine.find(
-        SavedNote,
-        query.and_(
-            SavedNote.chat_id == chat_id,
-            *filters
-        ),
-        sort=(SavedNote.group, SavedNote.names),
-        limit=300
-    ) or None
-
-
 async def get_notes_sections(
-        notes,
-        group_filter=None,
-        name_filter=None,
-        show_hidden=False,
-        purify_groups=False
+        notes: List[SavedNote],
+        group_filter: Optional[str] = None,
+        name_filter: Optional[str] = None,
+        show_hidden: bool = False,
+        purify_groups: bool = False
 ) -> Optional[List[Union[Section, VList]]]:
     if not notes:
         return None
@@ -119,7 +76,7 @@ async def get_notes_sections(
     notes_section = []
 
     for group in group_filter or (groups := list(set([x.group for x in notes]))):
-        if group in ['hidden', 'admin'] and not show_hidden:
+        if group in HIDDEN_GROUPS and not show_hidden:
             continue
 
         notes_list: List[KeyValue] = []
@@ -134,9 +91,13 @@ async def get_notes_sections(
             )
 
         if notes_list:
-            notes_section.append(Section(VList(*notes_list), title=f'#{group or "nogroup"}', title_underline=False))
+            group_title = f"#{(group or DEFAULT_GROUP_NAME).capitalize()}{'!' if group in HIDDEN_GROUPS else ''}"
+            notes_section.append(Section(
+                VList(*notes_list), title=group_title,
+                title_underline=False
+            ))
 
-        # Remove groups section if there is only 'nogroup' and purify_groups is on
+        # Remove groups section if there is only default and purify_groups is on
         if purify_groups and len(groups) == 1 and not groups[0]:
             return [VList(*notes_list)]
 
