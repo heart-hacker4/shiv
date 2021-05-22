@@ -9,7 +9,7 @@ from telethon.tl.custom import Button as TButton
 
 from src import BOT
 from src.types.chat import ChatId
-from .text import random_parser
+from .random_parse import random_parser
 
 START_URL = f'https://t.me/{BOT.username}?start='
 BUTTONS_TEXT_REGEXP = re.compile(

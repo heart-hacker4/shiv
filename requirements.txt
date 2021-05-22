@@ -35,3 +35,7 @@ babel
 captcha
 
 stfu_tg==1.2
+
+
+# Nimlang
+nimporter

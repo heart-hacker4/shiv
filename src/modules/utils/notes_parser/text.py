@@ -1,11 +1,8 @@
 import html
 import re
-from random import choice
 from typing import Optional
 
 from aiogram.types import Message, User
-
-# from src.modules.utils.user_details import get_user_link
 
 RANDOM_REGEXP = re.compile(r'{([^{}]+)}')
 
@@ -52,13 +49,4 @@ def vars_parser(
     if not no_parse:
         return text.replace('{mention}', user.get_mention(as_html=not md))
 
-    return text
-
-
-def random_parser(text: str) -> str:
-    for item in RANDOM_REGEXP.finditer(text):
-        if '|' not in item.group(0):
-            continue
-        random_item = choice(item.group(1).split('|'))
-        text = text.replace(item.group(0), str(random_item))
     return text

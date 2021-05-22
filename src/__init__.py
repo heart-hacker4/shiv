@@ -19,6 +19,7 @@
 import asyncio
 import logging
 
+import nimporter
 from aiogram import Bot, Dispatcher, types
 from aiogram.bot.api import TelegramAPIServer
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
@@ -42,6 +43,10 @@ storage = RedisStorage2(host=SETTINGS.redis_url, db=SETTINGS.redis_states_db, st
 dp = Dispatcher(bot, storage=storage)
 
 loop = asyncio.get_event_loop()
+
+log.info("Comping nimlang files...")
+nimporter.build_nim_extensions()
+log.debug("...Done!")
 
 log.debug("Getting bot info...")
 BOT = loop.run_until_complete(bot.get_me())
