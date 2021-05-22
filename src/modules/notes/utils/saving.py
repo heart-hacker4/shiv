@@ -11,7 +11,7 @@ from src.modules.utils.notes_parser.buttons import (
     WrongButtonAction, ButtonShouldHaveArgument, TooMuchButtonsInRow
 )
 from src.modules.utils.notes_parser.encode import get_parsed_note_list
-from src.modules.utils.text import STFDoc, HList, KeyValue, Section, Code
+from stf import Doc, HList, KeyValue, Section, Code
 from src.services.mongo import engine, db
 from src.types.chat import ChatId
 from ..models import RESTRICTED_SYMBOLS
@@ -150,9 +150,9 @@ def build_saved_text(
         note: BaseNote,
         note_group: str,
         is_updated: bool = False
-) -> STFDoc:
+) -> Doc:
     # Build reply text
-    doc = STFDoc()
+    doc = Doc()
     sec = Section(
         # KeyValue(strings['status'], strings[status]),
         KeyValue(strings['names'], HList(*note_names, prefix='#')),

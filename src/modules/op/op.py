@@ -7,7 +7,7 @@ from aiogram.types import Message
 from src.modules import MODULES
 from src.modules.utils.covert import convert_size
 from src.modules.utils.message import ENABLE_KEYWORDS, DISABLE_KEYWORDS
-from src.modules.utils.text import Section, KeyValue, STFDoc, Code, HList
+from stf import Section, KeyValue, Doc, Code, HList
 from src.services.mongo import db
 from src.services.redis import redis
 
@@ -32,7 +32,7 @@ class OPFunctions:
                 return await message.reply(f'__detailed_stats__ not found in - {arg_raw}!')
 
             return await message.reply(str(
-                STFDoc(Section(*(await module.__detailed_stats__()), title=f'Detailed stats of {arg_raw}'))
+                Doc(Section(*(await module.__detailed_stats__()), title=f'Detailed stats of {arg_raw}'))
             ))
 
         # Normal stats
@@ -75,7 +75,7 @@ class OPFunctions:
         # TODO: WTF
         str(data[2])
 
-        doc = STFDoc(
+        doc = Doc(
             Section(*data, title="Stats"),
             Section(
                 HList(*[x.__name__.split('.')[2] for x in MODULES if hasattr(x, '__detailed_stats__')]),

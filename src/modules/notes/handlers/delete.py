@@ -4,7 +4,7 @@ from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
-from src.modules.utils.text import STFDoc, VList, HList, Section
+from stf import Doc, VList, HList, Section
 from ..db.notes import get_note, del_note, get_notes, del_all_notes
 from ..utils.get import get_similar_note, get_note_name
 
@@ -46,7 +46,7 @@ async def clear_multiple_notes(message, chat, strings):
     if not deleted and not not_deleted:
         return await message.reply(strings['notes_wasnt_touched'])
 
-    await message.reply(str(STFDoc(sec)))
+    await message.reply(str(Doc(sec)))
 
 
 @dp.message_handler(commands=['clear', 'delnote'], is_admin=True)

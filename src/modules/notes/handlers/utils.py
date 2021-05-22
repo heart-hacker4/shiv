@@ -25,7 +25,7 @@ from aiogram.utils.exceptions import MessageNotModified
 from pymongo import UpdateOne
 
 from src.modules.utils.language import get_string
-from src.modules.utils.text import KeyValue, Code
+from stf import KeyValue, Code
 from src.services.mongo import db, engine
 from ..db.notes import count_of_filters
 from ..models import SavedNote, PrivateNotes, CleanNotes, ExportModel, MAX_NOTES_PER_CHAT

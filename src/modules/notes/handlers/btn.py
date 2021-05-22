@@ -29,7 +29,7 @@ from src.filters.btn import ButtonObj
 from src.modules.utils.connections import set_connected_chat
 from src.modules.utils.notes_parser.buttons import BUTTONS, DefinedButtonOptions, DefinedButtonType
 from src.modules.utils.notes_parser.send import send_note
-from src.modules.utils.text import STFDoc, Section
+from stf import Doc, Section
 from src.modules.utils.user_details import get_chat
 from ..db.notes import get_note
 from ..utils.get import get_notes_sections, get_notes
@@ -88,7 +88,7 @@ async def pmnotes_btn(message: Message, strings: dict, btn: ButtonObj):
     if not (notes_section := await get_notes_sections(await get_notes(chat_id), purify_groups=True)):
         return await message.reply(strings["notelist_no_notes"].format(chat_title=chat.title))
 
-    doc = STFDoc(
+    doc = Doc(
         Section(*notes_section, title=strings['notelist_header'].format(chat_name=chat.title)),
         strings['get_tip']
     )
