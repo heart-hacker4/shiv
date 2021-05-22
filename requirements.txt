@@ -1,12 +1,10 @@
 # General
-#telethon
-telethon~=1.17.0
 aiogram
 
 # DBs
 pydantic[dotenv]
 redis
-aioredis # Redis memery storage fom aiogram
+aioredis
 pymongo
 motor
 dnspython # needed to connect to cloud MongoDB instances
@@ -14,22 +12,27 @@ odmantic # MongoDB ORM
 
 # Optional deps to make bot faster
 aiohttp[speedups]
-cryptg
 cryptography
-
-# Other
-orjson
-python-dotenv
-envparse
-hypercorn
-aiocron
-apscheduler
-requests
 ujson
+orjson
+
+# Logs
 coloredlogs
 loguru
+
+# Optional
+telethon
 sentry_sdk
-babel
-captcha
+
+# Regex
 async-timeout
 regex
+
+# Other
+PyYaml
+aiocron
+apscheduler
+babel
+captcha
+
+stf==1.0
