@@ -23,12 +23,12 @@ from datetime import datetime, timedelta
 
 from aiogram.utils.exceptions import MessageNotModified
 from pymongo import UpdateOne
+from stfu_tg import Code, KeyValue
 
 from src.modules.utils.language import get_string
-from stf import KeyValue, Code
 from src.services.mongo import db, engine
 from ..db.notes import count_of_filters
-from ..models import SavedNote, PrivateNotes, CleanNotes, ExportModel, MAX_NOTES_PER_CHAT
+from ..models import CleanNotes, ExportModel, MAX_NOTES_PER_CHAT, PrivateNotes, SavedNote
 from ..utils.get import get_note
 from ..utils.saving import get_notes_count
 

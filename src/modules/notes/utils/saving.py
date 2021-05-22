@@ -1,21 +1,18 @@
 import html
 import re
 from datetime import datetime
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
 from aiogram.types import Message
+from stfu_tg import Code, Doc, HList, KeyValue, Section
 
 from src.models.notes import BaseNote, ParseMode
 from src.modules.utils.message import get_arg
-from src.modules.utils.notes_parser.buttons import (
-    WrongButtonAction, ButtonShouldHaveArgument, TooMuchButtonsInRow
-)
+from src.modules.utils.notes_parser.buttons import (ButtonShouldHaveArgument, TooMuchButtonsInRow, WrongButtonAction)
 from src.modules.utils.notes_parser.encode import get_parsed_note_list
-from stf import Doc, HList, KeyValue, Section, Code
-from src.services.mongo import engine, db
+from src.services.mongo import db, engine
 from src.types.chat import ChatId
-from ..models import RESTRICTED_SYMBOLS
-from ..models import SavedNote, MAX_NOTES_PER_CHAT, MAX_GROUPS_PER_CHAT
+from ..models import MAX_GROUPS_PER_CHAT, MAX_NOTES_PER_CHAT, RESTRICTED_SYMBOLS, SavedNote
 
 REGEXP_NOTE_DESCRIPTION = re.compile(r'^("([^"]*)")')
 

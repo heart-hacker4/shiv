@@ -1,12 +1,12 @@
-from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
+from stfu_tg import Doc, HList, Section, VList
 
 from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
-from stf import Doc, VList, HList, Section
-from ..db.notes import get_note, del_note, get_notes, del_all_notes
-from ..utils.get import get_similar_note, get_note_name
+from ..db.notes import del_all_notes, del_note, get_note, get_notes
+from ..utils.get import get_note_name, get_similar_note
 
 
 @dp.message_handler(commands=['clear', 'delnote'], text_contains='|', is_admin=True)

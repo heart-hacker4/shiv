@@ -1,13 +1,13 @@
-from src import dp
+from aiogram.types import Message
+from stfu_tg import Code, Doc, KeyValue, Section
 
-from aiogram.types import Message, User
+from src import dp
+from src.models.chat import BaseUser
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.users_chats.decorators import get_user_dec
 from src.models.chat import SavedUser, BaseUser
 from stfu_tg import Doc, Section, HList, KeyValue, Code
-from typing import List
-from src.modules.utils.connections import chat_connection
 
 
 @dp.message_handler(commands=['info', 'userinfo'])

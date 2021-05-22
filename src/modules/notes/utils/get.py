@@ -22,11 +22,11 @@ import difflib
 from typing import List, Optional, Union
 
 from aiogram.types import Message
+from stfu_tg import HList, KeyValue, Section, VList
 
-from stf import Section, KeyValue, VList, HList
 from src.types.chat import ChatId
-from ..db.notes import get_notes, get_note
-from ..models import SavedNote, DEFAULT_GROUP_NAME, HIDDEN_GROUPS
+from ..db.notes import get_note, get_notes
+from ..models import DEFAULT_GROUP_NAME, HIDDEN_GROUPS, SavedNote
 
 
 def get_note_name(arg: str) -> str:

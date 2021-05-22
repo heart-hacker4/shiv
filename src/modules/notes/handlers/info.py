@@ -22,19 +22,19 @@ import re
 
 from aiogram.types import Message
 from babel.dates import format_datetime
+from stfu_tg import Code, Doc, HList, Italic, KeyValue, Section
 
 from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
-from stf import Doc, Section, KeyValue, Code, Italic, HList
 from src.modules.utils.user_details import get_user_link
 from src.services.mongo import engine
 from ..db.notes import get_note, get_notes
-from ..models import SavedNote, DEFAULT_GROUP_NAME
+from ..models import DEFAULT_GROUP_NAME, SavedNote
 from ..utils.clean_notes import clean_notes
-from ..utils.get import get_similar_note, get_notes_sections, get_note_name
+from ..utils.get import get_note_name, get_notes_sections, get_similar_note
 
 
 @dp.message_handler(regexp=re.compile(r'^#([\w-]+)'))

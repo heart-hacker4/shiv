@@ -35,4 +35,4 @@ apscheduler
 babel
 captcha
 
-stf==1.0
+stfu_tg==1.2

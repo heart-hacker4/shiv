@@ -21,18 +21,18 @@
 from contextlib import suppress
 from typing import Union
 
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.utils.exceptions import MessageCantBeDeleted
+from stfu_tg import Doc, Section
 
 from src import dp
 from src.filters.btn import ButtonObj
 from src.modules.utils.connections import set_connected_chat
 from src.modules.utils.notes_parser.buttons import BUTTONS, DefinedButtonOptions, DefinedButtonType
 from src.modules.utils.notes_parser.send import send_note
-from stf import Doc, Section
 from src.modules.utils.user_details import get_chat
 from ..db.notes import get_note
-from ..utils.get import get_notes_sections, get_notes
+from ..utils.get import get_notes, get_notes_sections
 from ...utils.language import get_strings_dec
 
 BTN_PREFIX = 'note_btn'

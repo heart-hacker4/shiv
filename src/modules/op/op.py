@@ -3,13 +3,14 @@ import os
 import aiohttp
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import Message
+from stfu_tg import Bold, Code, Doc, HList, KeyValue, Section, VList
 
 from src.modules import MODULES
 from src.modules.utils.covert import convert_size
-from src.modules.utils.message import ENABLE_KEYWORDS, DISABLE_KEYWORDS
-from stf import Section, KeyValue, Doc, Code, HList
+from src.modules.utils.message import DISABLE_KEYWORDS, ENABLE_KEYWORDS
 from src.services.mongo import db
 from src.services.redis import redis
+from .start import REGISTERED_OP_COMMANDS
 
 
 class OPFunctions:
@@ -18,7 +19,21 @@ class OPFunctions:
         self.purgecache.only_owner = True
 
     @staticmethod
+    async def help(message: Message, arg_raw: str = ''):
+        """Shows the help of OP commands"""
+        doc = Doc()
+        for module_name in REGISTERED_OP_COMMANDS.keys():
+            data = []
+            for cmd in REGISTERED_OP_COMMANDS[module_name].items():
+                help_string = cmd[1]['help']
+                data.append(KeyValue(cmd[0], help_string) if help_string else Bold(cmd[0]))
+            doc += Section(VList(*data), title=module_name)
+
+        return await message.reply(doc)
+
+    @staticmethod
     async def stats(message: Message, arg_raw: str = '') -> Message:
+        """Shows current stats of the bot"""
         from src import SOPHIE_VERSION
 
         # Detailed stats
@@ -86,12 +101,16 @@ class OPFunctions:
 
     @staticmethod
     async def purgecache(message: Message) -> Message:
+        """Purges reds cache (potentially danger)"""
         redis.flushdb()
         return await message.reply("Redis cache was cleaned.")
 
     @staticmethod
     async def ip(message: Message) -> Message:
-        await message.reply(requests.get("https://ipinfo.io/ip").text)
+        """Shows public ip"""
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://ipinfo.io/ip") as resp:
+                await message.reply(Code(await resp.text()))
 
     @staticmethod
     async def mmode(message: Message, arg_raw: str = '') -> Message:
