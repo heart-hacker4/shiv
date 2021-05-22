@@ -1,3 +1,4 @@
+import html
 import re
 from datetime import datetime
 from typing import List, Optional, Union, Tuple
@@ -22,7 +23,7 @@ REGEXP_NOTE_DESCRIPTION = re.compile(r'^("([^"]*)")')
 def check_note_names(note_names: List[str]) -> Optional[str]:
     sym = None
     if any((sym := s) in '|'.join(note_names) for s in RESTRICTED_SYMBOLS):
-        return sym
+        return html.escape(sym)
 
     return None
 
@@ -30,7 +31,7 @@ def check_note_names(note_names: List[str]) -> Optional[str]:
 def check_note_group(note_group: str) -> Optional[str]:
     sym = None
     if any((sym := s) in note_group for s in RESTRICTED_SYMBOLS):
-        return sym
+        return html.escape(sym)
 
     return None
 
@@ -93,7 +94,7 @@ async def get_names_group(
 
     note_names = [x.removeprefix('#') for x in arg.split('|')]
     if sym := check_note_names(note_names):
-        return await message.reply(strings['notename_cant_contain'].format(symbol=sym))
+        return await message.reply(strings['notename_cant_contain'].format(symbol=sym), parse_mode=None)
 
     # Notes limit
     if await get_notes_count(chat_id) > MAX_NOTES_PER_CHAT:

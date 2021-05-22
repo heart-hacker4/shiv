@@ -59,6 +59,11 @@ class BaseNote(EmbeddedModel):
             raise ValueError('Text should be shorter than 6144 symbols!')
         return v
 
+    @validator('files')
+    def files_count(cls, v):
+        if v and len(v) > 10:
+            raise ValueError('Media group can contain only 10 files at max!')
+
     # @validator('old')
     # def old_markdown(cls, v, values):
     #    if not v and values['parse_mode'] is ParseMode.md:
