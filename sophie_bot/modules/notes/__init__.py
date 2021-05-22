@@ -1,5 +1,6 @@
 from .handlers.btn import *
 from .handlers.config import *
+from .handlers.delete import *
 from .handlers.get import *
 from .handlers.info import *
 from .handlers.save_media import *
