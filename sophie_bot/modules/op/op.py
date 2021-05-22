@@ -1,0 +1,95 @@
+import os
+
+import requests
+from aiogram.dispatcher import Dispatcher
+from aiogram.types import Message
+
+from sophie_bot.decorator import REGISTRED_COMMANDS
+from sophie_bot.modules import LOADED_MODULES
+from sophie_bot.modules.utils.covert import convert_size
+from sophie_bot.modules.utils.message import ENABLE_KEYWORDS, DISABLE_KEYWORDS
+from sophie_bot.modules.utils.text import Section, KeyValue, STFDoc, Code, HList
+from sophie_bot.services.mongo import db
+from sophie_bot.services.redis import redis
+
+
+class OPFunctions:
+    async def __setup__(self, _: Dispatcher):
+        self.logs.only_owner = True
+        self.ip.only_owner = True
+        self.purgecache.only_owner = True
+
+    @staticmethod
+    async def stats(message: Message, arg_raw: str = '') -> Message:
+        from sophie_bot import SOPHIE_VERSION
+
+        if 'fsTotalSize' in (local_db := await db.command("dbstats")):
+            mongo_used = local_db['dataSize']
+            mongo_free = local_db['fsTotalSize'] - local_db['fsUsedSize']
+        else:
+            # MongoDB Atlas mode
+            mongo_used = local_db['storageSize']
+            mongo_free = 536870912 - local_db['storageSize']
+
+        data = [
+            Section(
+                KeyValue("Version", SOPHIE_VERSION),
+                KeyValue("Run mode",
+                         f"Webhooks ({os.getenv('WEBHOOKS_PORT')})" if os.getenv('WEBHOOKS') else 'Polling'),
+                KeyValue("Loaded modules", Code(len(LOADED_MODULES))),
+                KeyValue("Commands registred", Code(len(REGISTRED_COMMANDS))),
+                title="General"
+            ), Section(
+                KeyValue('MongoDB size', f"{convert_size(mongo_used)} / {convert_size(mongo_free)}"),
+                KeyValue('Redis keys', Code(len(redis.keys()))),
+                title="Database"
+            )
+        ]
+
+        usage_count = []
+        for module in [m for m in LOADED_MODULES if hasattr(m, '__usage_count__')]:
+            usage_data = await module.__usage_count__()
+            usage_count.extend(usage_data) if type(usage_data) is list else usage_count.append(usage_data)
+
+        data.append(Section(
+            *usage_count,
+            title="Usage count"
+        ))
+
+        # Appends __stats__ to the end
+        for module in [m for m in LOADED_MODULES if hasattr(m, '__stats__')]:
+            data.append(await module.__stats__())
+
+        # TODO: WTF
+        str(data[2])
+
+        doc = STFDoc(
+            Section(*data, title="Stats"),
+            Section(
+                HList(*[x.__name__.split('.')[2] for x in LOADED_MODULES if hasattr(x, '__detailed_stats__')]),
+                title='Detailed stats available for modules')
+        )
+
+        return await message.reply(str(doc))
+
+    @staticmethod
+    async def purgecache(message: Message) -> Message:
+        redis.flushdb()
+        return await message.reply("Redis cache was cleaned.")
+
+    @staticmethod
+    async def ip(message: Message) -> Message:
+        await message.reply(requests.get("https://ipinfo.io/ip").text)
+
+    @staticmethod
+    async def mmode(message: Message, arg_raw: str = '') -> Message:
+        if not arg_raw:
+            # Status
+            return await message.reply(f"maintenance mode is {'on' if redis.get('mmode') else 'off'}")
+
+        if arg_raw in ENABLE_KEYWORDS:
+            redis.set('mmode', 1, keepttl=7200)
+            return await message.reply(f"maintenance mode is now enabled for 2 hours")
+        elif arg_raw in DISABLE_KEYWORDS:
+            redis.delete('mmode')
+            return await message.reply(f"maintenance mode is now disabled!")

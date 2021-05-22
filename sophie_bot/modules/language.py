@@ -24,6 +24,7 @@ from aiogram.utils.callback_data import CallbackData
 from aiogram.utils.exceptions import MessageNotModified
 
 from sophie_bot.decorator import register
+from sophie_bot.modules.utils.text import KeyValue, Code
 from sophie_bot.services.mongo import db
 from .utils.language import LANGUAGES, get_strings_dec, change_chat_lang, get_chat_lang_info, get_strings
 from .utils.message import get_arg
@@ -117,7 +118,7 @@ async def select_lang_callback(query, callback_data=None, **kwargs):
 
 
 async def __stats__():
-    return f"* <code>{len(LANGUAGES)}</code> languages loaded.\n"
+    return KeyValue('Languages loaded', Code(len(LANGUAGES)))
 
 
 async def __export__(chat_id):

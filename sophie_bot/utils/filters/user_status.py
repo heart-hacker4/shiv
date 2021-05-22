@@ -16,13 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
 
-from sophie_bot import OPERATORS, dp, OWNER_ID
+from sophie_bot import dp
 from sophie_bot.modules.utils.language import get_strings_dec
 from sophie_bot.modules.utils.user_details import is_user_admin
-from sophie_bot.services.mongo import mongodb
 
 
 class IsAdmin(BoundFilter):
@@ -46,41 +44,4 @@ class IsAdmin(BoundFilter):
         return True
 
 
-class IsOwner(BoundFilter):
-    key = 'is_owner'
-
-    def __init__(self, is_owner):
-        self.is_owner = is_owner
-
-    async def check(self, message: types.Message):
-        if message.from_user.id == OWNER_ID:
-            return True
-
-
-class IsOP(BoundFilter):
-    key = 'is_op'
-
-    def __init__(self, is_op):
-        self.is_owner = is_op
-
-    async def check(self, message: types.Message):
-        if message.from_user.id in OPERATORS:
-            return True
-
-
-class NotGbanned(BoundFilter):
-    key = 'not_gbanned'
-
-    def __init__(self, not_gbanned):
-        self.not_gbanned = not_gbanned
-
-    async def check(self, message: types.Message):
-        check = mongodb.blacklisted_users.find_one({'user': message.from_user.id})
-        if not check:
-            return True
-
-
 dp.filters_factory.bind(IsAdmin)
-dp.filters_factory.bind(IsOwner)
-dp.filters_factory.bind(NotGbanned)
-dp.filters_factory.bind(IsOP)

@@ -25,6 +25,7 @@ from aiogram.dispatcher.middlewares import BaseMiddleware
 from sophie_bot import dp
 from sophie_bot.decorator import register
 from sophie_bot.modules import LOADED_MODULES
+from sophie_bot.modules.utils.text import KeyValue, Code, Section
 from sophie_bot.services.mongo import db
 from sophie_bot.utils.logger import log
 from .utils.connections import chat_connection
@@ -229,23 +230,28 @@ class SaveUser(BaseMiddleware):
         await update_users_handler(message)
 
 
-async def __before_serving__(loop):
-    dp.middleware.setup(SaveUser())
+dp.middleware.setup(SaveUser())
 
 
-async def __stats__():
-    text = "* <code>{}</code> total users, in <code>{}</code> chats\n".format(
-        await db.user_list.count_documents({}),
-        await db.chat_list.count_documents({})
-    )
+async def __usage_count__():
+    new_users = await db.user_list.count_documents({
+        'first_detected_date': {'$gte': datetime.datetime.now() - datetime.timedelta(days=2)}
+    })
+    new_chats = await db.chat_list.count_documents({
+        'first_detected_date': {'$gte': datetime.datetime.now() - datetime.timedelta(days=2)}
+    })
 
-    text += "* <code>{}</code> new users and <code>{}</code> new chats in the last 48 hours\n".format(
-        await db.user_list.count_documents({
-            'first_detected_date': {'$gte': datetime.datetime.now() - datetime.timedelta(days=2)}
-        }),
-        await db.chat_list.count_documents({
-            'first_detected_date': {'$gte': datetime.datetime.now() - datetime.timedelta(days=2)}
-        })
-    )
-
-    return text
+    return [
+        Section(
+            KeyValue('Total', Code(await db.chat_list.count_documents({}))),
+            KeyValue('New in last 24h', Code(new_chats)),
+            title="Chats",
+            title_underline=False
+        ),
+        Section(
+            KeyValue('Total', Code(await db.user_list.count_documents({}))),
+            KeyValue('New in last 24h', Code(new_users)),
+            title="Users",
+            title_underline=False
+        )
+    ]

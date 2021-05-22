@@ -24,6 +24,7 @@ from aiogram.utils.exceptions import MessageNotModified
 from pymongo import UpdateOne
 
 from sophie_bot.modules.utils.language import get_string
+from sophie_bot.modules.utils.text import KeyValue, Code
 from sophie_bot.services.mongo import db, engine
 from ..models import SavedNote, PrivateNotes, CleanNotes, ExportModel, MAX_NOTES_PER_CHAT
 from ..utils.get import get_note
@@ -32,11 +33,12 @@ from ..utils.saving import get_notes_count
 __data_model__ = ExportModel
 
 
-async def __stats__():
-    text = "* <code>{}</code> total notes\n".format(
-        await db.notes.count_documents({})
-    )
-    return text
+async def __usage_count__():
+    return KeyValue('Total notes', Code(await db.notes.count_documents({})))
+
+
+async def __detailed_stats__():
+    pass
 
 
 async def __export_data__(chat_id) -> ExportModel:

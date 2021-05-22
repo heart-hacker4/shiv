@@ -59,6 +59,10 @@ class WelcomeSecurityState(StatesGroup):
     math = State()
 
 
+async def __detailed_stats__():
+    pass
+
+
 @register(cmds='welcome')
 @chat_connection(only_groups=True)
 @get_strings_dec('greetings')
