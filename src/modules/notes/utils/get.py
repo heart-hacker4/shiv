@@ -23,7 +23,7 @@ from typing import List, Optional, Union
 
 from aiogram.types import Message
 
-from src.modules.utils.text import Section, KeyValue, VList, HList
+from stf import Section, KeyValue, VList, HList
 from src.types.chat import ChatId
 from ..db.notes import get_notes, get_note
 from ..models import SavedNote, DEFAULT_GROUP_NAME, HIDDEN_GROUPS

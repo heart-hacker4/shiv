@@ -28,7 +28,7 @@ from src.modules.utils.connections import chat_connection
 from src.modules.utils.disable import disableable_dec
 from src.modules.utils.language import get_strings_dec
 from src.modules.utils.message import get_arg, need_args_dec
-from src.modules.utils.text import STFDoc, Section, KeyValue, Code, Italic, HList
+from stf import Doc, Section, KeyValue, Code, Italic, HList
 from src.modules.utils.user_details import get_user_link
 from src.services.mongo import engine
 from ..db.notes import get_note, get_notes
@@ -76,7 +76,7 @@ async def get_notes_list_cmd(message: Message, chat, strings):
     else:
         show_hidden = False
 
-    doc = STFDoc()
+    doc = Doc()
     sections = [KeyValue(strings['search_pattern'], Code(arg))] if arg else []
 
     if not (notes_section := await get_notes_sections(
@@ -104,7 +104,7 @@ async def search_in_note(message, chat, strings):
     if not notes or not (notes_section := await get_notes_sections(notes)):
         return await message.reply(strings["query_not_found"].format(chat_name=chat['chat_title']))
 
-    return await message.reply(str(STFDoc(
+    return await message.reply(str(Doc(
         Section(
             KeyValue(strings['search_pattern'], Code(pattern)),
             *notes_section,
@@ -168,4 +168,4 @@ async def note_info(message, chat, strings):
             title=strings['note_info_updated']
         )
 
-    return await message.reply(str(STFDoc(sec)))
+    return await message.reply(str(Doc(sec)))

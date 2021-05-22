@@ -7,11 +7,11 @@ from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardBu
 from odmantic import EmbeddedModel
 from telethon.tl.custom import Button as TButton
 
-from src import BOT_USERNAME
+from src import BOT
 from src.types.chat import ChatId
 from .text import random_parser
 
-START_URL = f'https://t.me/{BOT_USERNAME}?start='
+START_URL = f'https://t.me/{BOT.username}?start='
 BUTTONS_TEXT_REGEXP = re.compile(
     # [Button name](type:argument:same)
     r'\[(.+?)]\((?:button|btn)?(?!http(?:s))(\w+|#)(?:(?:[:=])?(?:\s)?(?://)?(.*?)|)[:=]?(?:(?:\s)?(same|\^))?\)(?:\n)?'

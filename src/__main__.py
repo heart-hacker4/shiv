@@ -23,52 +23,45 @@ from importlib import import_module
 from aiogram import executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
-from src import dp, TOKEN, bot
+from src import dp
 from src.modules import MODULES, load_modules
 from src.utils.logger import log
+from src.config import SETTINGS
 
-if os.getenv('DEBUG_MODE', False):
-    log.debug("Enabling logging middleware.")
-    dp.middleware.setup(LoggingMiddleware())
-
-LOAD = os.getenv("LOAD", "").split(',')
-DONT_LOAD = os.getenv("DONT_LOAD", "").split(',')
+try:
+    import uvloop
+except ImportError:
+    log.info("Skipping importing uvloop...")
+    SETTINGS.uvloop = False
 
 loop = asyncio.get_event_loop()
 
-load_modules()
+# Load modules
+log.info(f"Loaded modules - {', '.join(map(lambda x: x.__module_name__, load_modules(SETTINGS.skip_modules)))}")
 
 # Import misc stuff
 if not os.getenv('DEBUG_MODE', False):
-    import_module("src.utils.sentry")
-
-
-async def before_srv_task(loop):
-    for module in [m for m in MODULES if hasattr(m, '__before_serving__')]:
-        log.debug('Before serving: ' + module.__name__)
-        loop.create_task(module.__before_serving__(loop))
+    log.debug("Enabling logging middleware.")
+    dp.middleware.setup(LoggingMiddleware())
+    if SETTINGS.sentry_url:
+        log.debug("Enabling sentry extension.")
+        import_module("src.utils.sentry")
 
 
 async def start(_):
     log.debug("Starting before serving task for all modules...")
-    loop.create_task(before_srv_task(loop))
-
-    if not os.getenv('DEBUG_MODE', False):
-        log.debug("Waiting 2 seconds...")
-        await asyncio.sleep(2)
-
-
-async def start_webhooks(_):
-    url = os.getenv('WEBHOOK_URL') + f"/{TOKEN}"
-    await bot.set_webhook(url)
-    return await start(_)
+    for module in [m for m in MODULES if hasattr(m, '__before_serving__')]:
+        log.debug('Before serving: ' + module.__name__)
+        await module.__before_serving__(loop)
 
 
 log.info("Starting loop..")
-log.info("Aiogram: Using polling method")
 
-if os.getenv('WEBHOOKS', False):
-    port = os.getenv('WEBHOOKS_PORT', 8080)
-    executor.start_webhook(dp, f'/{TOKEN}', on_startup=start_webhooks, port=port)
+if SETTINGS.uvloop:
+    log.info("Setting uvloop as default asyncio loop.")
+    uvloop.install()
+
+if SETTINGS.webhooks_port:
+    executor.start_webhook(dp, f'/{SETTINGS.token}', on_startup=start, port=SETTINGS.webhooks_port)
 else:
     executor.start_polling(dp, loop=loop, on_startup=start)
