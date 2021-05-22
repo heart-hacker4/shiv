@@ -106,10 +106,15 @@ async def get_notes(chat_id, *filters) -> Optional[List[SavedNote]]:
     ) or None
 
 
-async def get_notes_sections(notes, group_filter=None, name_filter=None, show_hidden=False,
-                             purify_groups=False) -> Optional[List[Union[Section, VList]]]:
+async def get_notes_sections(
+        notes,
+        group_filter=None,
+        name_filter=None,
+        show_hidden=False,
+        purify_groups=False
+) -> Optional[List[Union[Section, VList]]]:
     if not notes:
-        return []
+        return None
 
     notes_section = []
 
