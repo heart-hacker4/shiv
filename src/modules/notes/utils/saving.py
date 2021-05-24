@@ -18,17 +18,15 @@ REGEXP_NOTE_DESCRIPTION = re.compile(r'^("([^"]*)")')
 
 
 def check_note_names(note_names: List[str]) -> Optional[str]:
-    sym = None
-    if any((sym := s) in '|'.join(note_names) for s in RESTRICTED_SYMBOLS):
+    if any((sym := symbol) in '|'.join(note_names) for symbol in RESTRICTED_SYMBOLS):
         return html.escape(sym)
 
     return None
 
 
 def check_note_group(note_group: str) -> Optional[str]:
-    sym = None
-    if any((sym := s) in note_group for s in RESTRICTED_SYMBOLS):
-        return html.escape(sym)
+    if any(sym := symbol in note_group for symbol in RESTRICTED_SYMBOLS):
+        return html.escape(sym) or None
 
     return None
 
@@ -113,7 +111,7 @@ async def upsert_note(
         edited_user: ChatId,
         note_data: BaseNote,
         note_group: str
-) -> (BaseNote, bool):
+) -> Tuple[BaseNote, bool]:
     if note := await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note_names))):
         is_updated = True
         note.names = note_names

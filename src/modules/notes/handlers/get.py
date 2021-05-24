@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re
-from typing import Optional, Tuple
+from typing import Any, Match, Optional, Tuple
 
 from aiogram.dispatcher.handler import SkipHandler
 from aiogram.types import Message
@@ -50,7 +50,7 @@ async def get_note_cmd(message: Message, chat, strings) -> Optional[Tuple[Messag
 
     if (note_name := get_note_name(get_arg(message)))[-1] == '!':
         keep = True
-        note_name[:-1]
+        note_name = note_name[:-1]
 
     if 'reply_to_message' in message:
         reply_to = message.reply_to_message.message_id
@@ -93,7 +93,7 @@ async def get_note_cmd(message: Message, chat, strings) -> Optional[Tuple[Messag
 @disableable_dec('get')
 @chat_connection(command='get')
 @clean_notes
-async def get_note_hashtag(message, chat, regexp: re.Match = None) -> Optional[Tuple[Message]]:
+async def get_note_hashtag(message, chat, regexp: Match[Any] = None) -> Optional[Tuple[Message]]:
     """Get note by hashname"""
     chat_id = chat['chat_id']
     note_name = regexp.group(1).lower()
@@ -111,7 +111,7 @@ async def get_note_hashtag(message, chat, regexp: re.Match = None) -> Optional[T
         user = message.from_user
 
     if note.group == 'admin' and not await is_user_admin(chat_id, user.id):
-        return
+        return None
 
     note_data = await send_note(
         send_id=message.chat.id,

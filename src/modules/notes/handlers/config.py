@@ -88,7 +88,7 @@ async def clean_notes(message, chat, strings):
         return await message.reply(strings['already_disabled_clean_notes'].format(chat_name=chat_name))
 
     if arg in ENABLE_KEYWORDS:
-        await save_clean_notes(chat_id)
+        await save_clean_notes(chat_id, None)
         text = strings['clean_notes_enable'].format(chat_name=chat['chat_title'])
     elif arg in DISABLE_KEYWORDS:
         await del_clean_notes(data)

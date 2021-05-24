@@ -52,8 +52,8 @@ async def get_group_hashtag(message: Message, chat, strings, regexp: re.Match = 
     if not await engine.find_one(SavedNote, (SavedNote.chat_id == chat_id) & (SavedNote.group == group_name)):
         return
 
-    notes = await get_notes_sections(await get_notes(chat_id), group_filter=[group_name])
-    doc = STFDoc(Section(
+    notes = await get_notes_sections(await get_notes(chat_id), group_filter=group_name)
+    doc = Doc(Section(
         KeyValue(strings['group_notes_header'], Code(group_name or DEFAULT_GROUP_NAME)),
         *notes,
         title=strings['notelist_header'].format(chat_name=chat['chat_title'])
@@ -123,7 +123,7 @@ async def note_info(message, chat, strings):
 
     if not (note := await get_note(note_name, chat_id)):
         text = strings['cant_find_note'].format(chat_name=chat['chat_title'])
-        if alleged_note_name := await get_similar_note(chat['chat_id'], get_note_name(arg)):
+        if alleged_note_name := await get_similar_note(chat['chat_id'], get_note_name(note_name)):
             text += strings['u_mean'].format(note_name=alleged_note_name)
         return await message.reply(text)
 

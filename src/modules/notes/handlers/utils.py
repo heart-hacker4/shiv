@@ -78,6 +78,7 @@ async def __import_data__(chat_id: int, data: ExportModel, overwrite=False):
     batch_actions = []
     for note in data.notes:
         batch_actions.append(UpdateOne(
+            # type: ignore
             (SavedNote.chat_id == chat_id) & (SavedNote.names.in_(note.names)),
             {
                 # We don't want to allow to update note's chat_id and its id

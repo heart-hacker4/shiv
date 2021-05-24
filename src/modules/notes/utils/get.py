@@ -41,7 +41,7 @@ async def get_note_w_prediction(
 ) -> Union[Message, SavedNote]:
     note_name = get_note_name(arg)
 
-    if not (note := await get_note(chat_id, note_name)):
+    if not (note := await get_note(note_name, chat_id)):
         text = strings['cant_find_note'].format(chat_name=chat_name)
         if alleged_note_name := await get_similar_note(chat_id, note_name):
             text += strings['u_mean'].format(note_name=alleged_note_name)
@@ -52,7 +52,7 @@ async def get_note_w_prediction(
 
 async def get_similar_note(chat_id, note_name):
     all_notes = []
-    async for note in get_notes(chat_id):
+    for note in await get_notes(chat_id):
         all_notes.extend(note['names'])
 
     if len(all_notes) > 0:
@@ -75,6 +75,7 @@ async def get_notes_sections(
 
     notes_section = []
 
+    groups = []
     for group in group_filter or (groups := list(set([x.group for x in notes]))):
         if group in HIDDEN_GROUPS and not show_hidden:
             continue

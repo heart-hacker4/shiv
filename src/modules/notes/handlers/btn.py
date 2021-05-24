@@ -48,7 +48,7 @@ BUTTONS.update({
 @dp.callback_query_handler(btn_prefix=BTN_PREFIX)
 @get_strings_dec('notes')
 async def note_btn(event: Union[Message, CallbackQuery], strings: dict, btn: ButtonObj):
-    if not (saved_note := await get_note(btn.argument.lower(), btn.chat_id)):
+    if not (saved_note := await get_note((btn.argument or '').lower(), btn.chat_id)):
         await event.answer(strings['no_note'])
         return
 
