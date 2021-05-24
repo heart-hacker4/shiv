@@ -21,6 +21,9 @@ class CmdFilter(Command):
 
     @staticmethod
     def is_code_command(message: Message) -> bool:
+        if not message.entities:
+            return True
+
         ent = message.entities[0]
         if ent.type in ('code', 'pre') and ent.offset == 0:
             # 0 means that the command prefix is covered by entity

@@ -16,21 +16,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from contextlib import suppress
 from functools import wraps
 
 from src.modules.utils.user_details import is_user_admin
 from src.services.mongo import db
 from src.utils.logger import log
 
-DISABLABLE_COMMANDS = []
+DISABLEABLE_COMMANDS = []
 
 
 def disableable_dec(command):
-    log.debug(f'Adding {command} to the disableable commands...')
+    log.debug(f'Added {command} to the disable-able commands.')
 
-    if command not in DISABLABLE_COMMANDS:
-        DISABLABLE_COMMANDS.append(command)
+    if command not in DISABLEABLE_COMMANDS:
+        DISABLEABLE_COMMANDS.append(command)
 
     def wrapped(func):
         @wraps(func)
@@ -41,9 +40,8 @@ def disableable_dec(command):
             user_id = message.from_user.id
             cmd = command
 
-            with suppress(KeyError):
-                if command in (aliases := message.conf['cmds']):
-                    cmd = aliases[0]
+            if command in (aliases := message.conf.get('commands', [])):
+                cmd = aliases[0]
 
             check = await db.disabled.find_one({'chat_id': chat_id, 'cmds': {'$in': [cmd]}})
             if check and not await is_user_admin(chat_id, user_id):

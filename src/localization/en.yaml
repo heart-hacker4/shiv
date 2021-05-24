@@ -279,21 +279,32 @@ STRINGS:
     click_btn: Click here
 
   disable:
+    did_you_mean: "Did you mean"
+
     #/disableable
-    disablable: "<b>Disable-able commands:</b>\n"
+    disablable: "Disable-able commands"
 
     #/disabled
-    no_disabled_cmds: No disabled commands in <b>{chat_name}</b>!
-    disabled_list: "<b>Disabled commands in {chat_name}:</b>\n"
+    no_disabled_cmds: "There is no disabled commands in <b>{chat_name}</b>!"
+    disabled_list: "Disabled commands in {chat_name}"
 
     #/disable
-    wot_to_disable: "What do you want to disable?"
+    multi_disable: "Multiple disabling"
+    multi_ok: "Disabled"
+    multi_no: "Not disabled"
+    why_no_disable: "The command(s) cannot be disabled because it does not exist. Check out /disablable to retrieve all disableable commands."
+    command_doesnt_exits: "Command doesn't exists!"
+    command_cant_be_disabled: "This command can't be disabled! Please check out /disableable to retrieve all disableable commands."
     already_disabled: "This command is already disabled!"
-    disabled: "Command <code>{cmd}</code> was disabled in <b>{chat_name}</b>!"
+    disabled: "Command <code>{cmd}</code> was successfully disabled for non-admins in <b>{chat_name}</b>!"
 
     #/enable
+    multi_ok_enabled: "Enabled"
+    multi_no_enabled: "Not enabled"
+    multi_enable: "Multiple enabling"
+    why_no_enable: "The command(s) cannot be enabled because it does not exist. Check out /disablable to retrieve all disableable commands."
     wot_to_enable: "What do you want to enable?"
-    already_enabled: "This command isn't disabled!"
+    already_enabled: "This command is already enabled!"
     enabled: "Command <code>{cmd}</code> was enabled in <b>{chat_name}</b>!"
 
     #/enableall

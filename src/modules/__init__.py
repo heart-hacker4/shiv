@@ -9,7 +9,8 @@ import_module("src.filters")
 ALL_MODULES = [
     'notes',
     'op',
-    'users_chats'
+    'users_chats',
+    'disable'
 ]
 MODULES = []
 

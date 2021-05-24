@@ -166,8 +166,8 @@ async def is_user_admin(chat_id, user_id):
     if chat_id == user_id:
         return True
 
-    if user_id in OPERATORS:
-        return True
+    # if user_id in OPERATORS:
+    #    return True
 
     # Workaround to support anonymous admins
     if user_id == 1087968824:
@@ -189,8 +189,8 @@ async def check_admin_rights(event: Union[Message, CallbackQuery], chat_id, user
     if chat_id == user_id:
         return True
 
-    if user_id in OPERATORS:
-        return True
+    # if user_id in OPERATORS:
+    #    return True
 
     # Workaround to support anonymous admins
     if user_id == 1087968824:
