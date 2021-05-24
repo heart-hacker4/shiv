@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from aiogram.types import InputMedia, Message, MessageId, User
 
 from src import bot
+from src.config import SETTINGS
 from src.models.notes import BaseNote, CAPTION_LENGTH, ParseMode
 from src.services.tg_telethon import tbot
 from src.types.chat import ChatId
@@ -11,7 +12,7 @@ from .random_parse import random_parser
 from .text import vars_parser
 
 MULTI_MESSAGE_FILE = ('sticker', 'video_note', 'contact')
-FILE_TYPES_NO_PREVIEW = ['animation']
+FILE_TYPES_NO_PREVIEW = ('animation',)
 FILE_TYPES_FUNCS = {
     'photo': bot.send_photo,
     'sticker': bot.send_sticker,
@@ -206,7 +207,15 @@ async def send_note(
         is_pm: bool = False
 ) -> Tuple[Message, ...]:
     """General send note method"""
-    if note.old:
+    if note.old and not SETTINGS.telethon:
+        return await message.reply(
+            "Unfortunately this note can not be sent due to this bot do not "
+            "have compatible modules required for this note."
+            "Please ask the bot owner about this."
+            "Meanwhile you can still save new notes."
+        ),
+
+    elif note.old:
         return await send_old_note(note, send_id, message=message, user=user, is_pm=is_pm, raw=raw),
 
     return await send_new_note(
