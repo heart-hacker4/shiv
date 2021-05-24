@@ -61,7 +61,7 @@ async def get_group_hashtag(message: Message, chat, strings, regexp: re.Match = 
     return await message.reply(str(doc))
 
 
-@dp.message_handler(commands=['notes', 'saved', 'notelist', 'noteslist'])
+@dp.message_handler(cmds=['notes', 'saved', 'notelist', 'noteslist'])
 @disableable_dec('notes')
 @chat_connection(command='notes')
 @get_strings_dec('notes')
@@ -89,7 +89,7 @@ async def get_notes_list_cmd(message: Message, chat, strings):
     return await message.reply(str(doc))
 
 
-@dp.message_handler(commands='search')
+@dp.message_handler(cmds='search')
 @disableable_dec('search')
 @chat_connection()
 @get_strings_dec('notes')
@@ -112,7 +112,7 @@ async def search_in_note(message, chat, strings):
         ))))
 
 
-@dp.message_handler(commands=['noteinfo', 'notedata'], user_admin=True)
+@dp.message_handler(cmds=['noteinfo', 'notedata'], user_admin=True)
 @chat_connection()
 @need_args_dec()
 @get_strings_dec('notes')

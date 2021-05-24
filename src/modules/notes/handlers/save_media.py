@@ -32,7 +32,7 @@ note_media_done = CallbackData('note_media_done_cb', 'note_id')
 SAVE_MEDIA_GROUP_LOCK = asyncio.Lock()
 
 
-@dp.message_handler(commands=['savemedia', 'savegallery', 'setmedia', 'setgallery'], user_admin=True)
+@dp.message_handler(cmds=['savemedia', 'savegallery', 'setmedia', 'setgallery'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
 @get_strings_dec('notes')

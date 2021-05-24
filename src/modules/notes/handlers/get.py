@@ -37,7 +37,7 @@ from ..utils.get import get_note_name, get_similar_note
 RESTRICTED_SYMBOLS_IN_NOTENAMES = [':', '**', '__', '`', '"', '[', ']', "'", '$', '||', '^']
 
 
-@dp.message_handler(commands='get')
+@dp.message_handler(cmds='get')
 @disableable_dec('get')
 @need_args_dec()
 @chat_connection()

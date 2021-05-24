@@ -21,6 +21,9 @@ class GlobalSettings(BaseSettings):
     mongo_db: str = 'sophie'
     skip_modules: List[str] = []
 
+    commands_exclamation_prefix: bool = False
+    ignore_case_commands: bool = True
+
     sentry_url: Optional[AnyUrl]
 
     telethon: bool = False

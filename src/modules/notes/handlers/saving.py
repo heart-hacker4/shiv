@@ -17,7 +17,7 @@ ADD_ALIAS_REGEXP = re.compile(r'\+((?:\w+|\|)+)')
 DEL_ALIAS_REGEXP = re.compile(r'-((?:\w+|\|)+)')
 
 
-@dp.message_handler(commands=['save', 'setnote', 'savenote'], user_admin=True)
+@dp.message_handler(cmds=['save', 'setnote', 'savenote'], user_admin=True)
 @dp.edited_message_handler(commands=['save', 'setnote', 'savenote'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)
@@ -59,7 +59,7 @@ async def save_note(message: Message, chat: dict, strings: dict):
     await message.reply(str(doc))
 
 
-@dp.message_handler(commands=['update', 'updatenote'], user_admin=True)
+@dp.message_handler(cmds=['update', 'updatenote'], user_admin=True)
 @dp.edited_message_handler(commands=['update', 'updatenote'], user_admin=True)
 @need_args_dec()
 @chat_connection(admin=True)

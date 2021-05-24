@@ -9,7 +9,7 @@ from ..db.notes import del_all_notes, del_note, get_note, get_notes
 from ..utils.get import get_note_name, get_similar_note
 
 
-@dp.message_handler(commands=['clear', 'delnote'], text_contains='|', is_admin=True)
+@dp.message_handler(cmds=['clear', 'delnote'], text_contains='|', is_admin=True)
 @chat_connection(admin=True)
 @need_args_dec()
 @get_strings_dec('notes')
@@ -49,7 +49,7 @@ async def clear_multiple_notes(message, chat, strings):
     await message.reply(str(Doc(sec)))
 
 
-@dp.message_handler(commands=['clear', 'delnote'], is_admin=True)
+@dp.message_handler(cmds=['clear', 'delnote'], is_admin=True)
 @chat_connection(admin=True)
 @need_args_dec()
 @get_strings_dec('notes')
@@ -67,7 +67,7 @@ async def clear_note(message, chat, strings):
     await message.reply(strings['note_removed'].format(note_name=note_name, chat_name=chat['chat_title']))
 
 
-@dp.message_handler(commands='clearall', is_admin=True)
+@dp.message_handler(cmds='clearall', is_admin=True)
 @chat_connection(admin=True)
 @get_strings_dec('notes')
 async def clear_all_notes(message, chat, strings):

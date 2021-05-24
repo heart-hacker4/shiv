@@ -25,7 +25,7 @@ from src.modules.utils.message import DISABLE_KEYWORDS, ENABLE_KEYWORDS, get_arg
 from ..db.config import (del_clean_notes, del_pm_notes, get_clean_notes, get_pm_notes, save_clean_notes, save_pm_notes)
 
 
-@dp.message_handler(commands=['privatenotes', 'pmnotes'], no_args=False, is_admin=True)
+@dp.message_handler(cmds=['privatenotes', 'pmnotes'], no_args=False, is_admin=True)
 @chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def private_notes_cmd_status(message, chat, strings):
@@ -36,7 +36,7 @@ async def private_notes_cmd_status(message, chat, strings):
     await message.reply(strings['current_state_info'].format(state=state, chat=chat['chat_title']))
 
 
-@dp.message_handler(commands=['privatenotes', 'pmnotes'], has_args=True, is_admin=True)
+@dp.message_handler(cmds=['privatenotes', 'pmnotes'], has_args=True, is_admin=True)
 @chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def private_notes_cmd(message, chat, strings):
@@ -63,7 +63,7 @@ async def private_notes_cmd(message, chat, strings):
         return await message.reply(strings['wrong_keyword'])
 
 
-@dp.message_handler(commands='cleannotes', no_args=True, is_admin=True)
+@dp.message_handler(cmds='cleannotes', no_args=True, is_admin=True)
 @chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def clean_notes_status(message, chat, strings):
@@ -73,7 +73,7 @@ async def clean_notes_status(message, chat, strings):
         return await message.reply(strings['clean_notes_disabled'].format(chat_name=chat['chat_title']))
 
 
-@dp.message_handler(commands='cleannotes', has_args=True, is_admin=True)
+@dp.message_handler(cmds='cleannotes', has_args=True, is_admin=True)
 @chat_connection(admin=True, only_groups=True)
 @get_strings_dec('notes')
 async def clean_notes(message, chat, strings):

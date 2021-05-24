@@ -8,7 +8,7 @@ from src.modules.utils.language import get_strings_dec
 from src.modules.utils.users_chats.decorators import get_user_dec
 
 
-@dp.message_handler(commands=['info', 'userinfo'])
+@dp.message_handler(cmds=['info', 'userinfo'])
 @disableable_dec("info")
 @get_user_dec(allow_self=True)
 @get_strings_dec("users")
@@ -29,7 +29,7 @@ async def user_info(message: Message, user: BaseUser, strings):
     await message.reply(str(doc))
 
 
-@dp.message_handler(commands=["id", "chatid", "userid"])
+@dp.message_handler(cmds=["id", "chatid", "userid"])
 async def get_id(message):
     await message.reply(Section(
         KeyValue("This is example key", "Example value"),
