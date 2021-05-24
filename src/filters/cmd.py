@@ -1,6 +1,7 @@
 from typing import Any, Dict, Iterable, Optional, Union
 
 from aiogram.dispatcher.filters.builtin import Command
+from aiogram.types import Message
 
 from src.config import SETTINGS
 
@@ -18,21 +19,29 @@ class CmdFilter(Command):
         )
         REGISTERED_COMMANDS.extend(cmds)
 
+    @staticmethod
+    def is_code_command(message: Message) -> bool:
+        ent = message.entities[0]
+        if ent.type in ('code', 'pre') and ent.offset == 0:
+            # 0 means that the command prefix is covered by entity
+            return True
+        return False
+
+    async def check_command(self, message: Message, *args, **kwargs):
+        if SETTINGS.ignore_forwarded_commands and message.forward_from:
+            return False
+
+        if SETTINGS.ignore_code_commands and self.is_code_command(message):
+            return False
+
+        data: Optional[Dict] = await super().check_command(message, *args, **kwargs)
+        if data:
+            data['commands'] = self.commands
+
+        return data
+
     @classmethod
     def validate(cls, full_config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Validator for filters factory
-
-        From filters factory this filter can be registered with arguments:
-
-         - ``command``
-         - ``commands_prefix`` (will be passed as ``prefixes``)
-         - ``commands_ignore_mention`` (will be passed as ``ignore_mention``)
-         - ``commands_ignore_caption`` (will be passed as ``ignore_caption``)
-
-        :param full_config:
-        :return: config or empty dict
-        """
         config = {}
         if 'cmds' in full_config:
             config['cmds'] = full_config.pop('cmds')

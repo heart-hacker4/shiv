@@ -23,6 +23,8 @@ class GlobalSettings(BaseSettings):
 
     commands_exclamation_prefix: bool = False
     ignore_case_commands: bool = True
+    ignore_forwarded_commands: bool = True
+    ignore_code_commands: bool = True
 
     sentry_url: Optional[AnyUrl]
 
