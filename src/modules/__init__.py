@@ -45,7 +45,7 @@ def load_modules(skip_modules: List[str]) -> List[Callable]:
         module.__setattr__('__module_name__', module.__name__.split('.', 2)[2])
 
         MODULES.append(module)
-        log.debug(f'...Done loading module!')
+        log.debug('...Done loading module!')
 
     log.debug('Done loading all modules!')
 
