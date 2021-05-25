@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.decorator import register
+from src.modules.utils.old_register import register
 
 from src.services.mongo import db
 from .utils.connections import chat_connection

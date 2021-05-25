@@ -1,7 +1,8 @@
 from datetime import datetime
+from typing import Optional
 
 from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.types import Chat, Message, User
+from aiogram.types import CallbackQuery, Chat, Message, User
 
 from src.models.chat import SavedChat, SavedUser
 from src.modules.utils.users_chats.db import (chat_username_duplications, get_chat, get_user_by_id, save_chat,
@@ -12,7 +13,7 @@ from src.utils.logger import log
 
 class SaveUser(BaseMiddleware):
     @staticmethod
-    async def update_user(chat_id: ChatId, user: User):
+    async def update_user(chat_id: Optional[ChatId], user: User):
         now_date = datetime.now()
         if not (user_data := await get_user_by_id(user.id)):
             user_data = SavedUser(
@@ -21,14 +22,14 @@ class SaveUser(BaseMiddleware):
                 first_name=user.first_name,
                 last_name=user.first_name,
                 last_detected=now_date,
-                chats=[chat_id] if chat_id != user.id else []
+                chats=[chat_id] if chat_id and chat_id != user.id else []
             )
         else:
             user_data.username = user.username
             user_data.first_name = user.first_name
             user_data.last_name = user.last_name
             user_data.last_detected = now_date
-            if chat_id != user.id and chat_id not in user_data.chats:
+            if chat_id and chat_id != user.id and chat_id not in user_data.chats:
                 user_data.chats.append(chat_id)
 
         if await user_username_duplications(user.id, user.username):
@@ -64,7 +65,7 @@ class SaveUser(BaseMiddleware):
 
         log.debug(f"Users: Chat {chat.title=} {chat.id=} updated.")
 
-    async def on_process_message(self, message: Message, data):
+    async def on_pre_process_message(self, message: Message, data):
         chat_id = message.chat.id
 
         # Update users
@@ -77,3 +78,6 @@ class SaveUser(BaseMiddleware):
             await self.update_user(chat_id, message.forward_from)
 
         await self.update_chat(message.chat)
+
+    async def on_pre_process_callback_query(self, query: CallbackQuery, data):
+        await self.update_user(None, query.from_user)

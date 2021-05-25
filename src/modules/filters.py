@@ -32,10 +32,10 @@ from aiogram.utils.exceptions import MessageCantBeDeleted, MessageToDeleteNotFou
 from async_timeout import timeout
 from bson.objectid import ObjectId
 from pymongo import UpdateOne
-from src.decorator import register
 
 from src import bot, loop
-from src.modules import LOADED_MODULES
+from src.modules import MODULES
+from src.modules.utils.old_register import register
 from src.services.mongo import db
 from src.services.redis import redis
 from src.utils.logger import log
@@ -346,7 +346,7 @@ async def delall_filters_no(event: CallbackQuery, strings: dict):
 
 async def __before_serving__(loop):
     log.debug('Adding filters actions')
-    for module in LOADED_MODULES:
+    for module in MODULES:
         if not getattr(module, '__filters__', None):
             continue
 

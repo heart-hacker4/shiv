@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from aiogram.utils.exceptions import BadRequest
-from src.decorator import register
 
 from src import bot
+from src.modules.utils.old_register import register
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 from .utils.message import get_arg

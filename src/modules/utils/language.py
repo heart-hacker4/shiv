@@ -33,7 +33,7 @@ log.info("Loading localizations...")
 for filename in os.listdir('src/localization'):
     log.debug('Loading language file ' + filename)
     with open('src/localization/' + filename, "r", encoding='utf8') as f:
-        lang = yaml.load(f, Loader=yaml.CLoader)
+        lang = yaml.load(f, Loader=yaml.SafeLoader)
 
         lang_code = lang['language_info']['code']
         lang['language_info']['babel'] = Locale(lang_code)

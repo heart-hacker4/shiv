@@ -22,10 +22,10 @@ from contextlib import suppress
 
 from aiogram.types.inline_keyboard import (InlineKeyboardButton, InlineKeyboardMarkup)
 from aiogram.utils.exceptions import MessageNotModified
-from src.decorator import register
 
-from src import BOT_USERNAME
+from src import BOT
 from src.modules.utils.disable import disableable_dec
+from src.modules.utils.old_register import register
 from .language import select_lang_keyboard
 from .utils.language import get_strings_dec
 
@@ -51,7 +51,7 @@ async def get_start_func(message, strings, edit=False):
                 InlineKeyboardButton(strings['btn_lang'], callback_data='lang_btn'))
     buttons.add(InlineKeyboardButton(strings['btn_chat'], url='https://t.me/SophieSupport'),
                 InlineKeyboardButton(strings['btn_channel'], url='https://t.me/sophieNEWS'))
-    buttons.add(InlineKeyboardButton(strings['btn_add'], url=f'https://telegram.me/{BOT_USERNAME}?startgroup=true'))
+    buttons.add(InlineKeyboardButton(strings['btn_add'], url=f'https://telegram.me/{BOT.username}?startgroup=true'))
     # Handle error when user click the button 2 or more times simultaneously
     with suppress(MessageNotModified):
         await task(strings['start_hi'], reply_markup=buttons)

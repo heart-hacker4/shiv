@@ -138,6 +138,9 @@ async def enable_all(message, chat, strings):
 @chat_connection(admin=True)
 @get_strings_dec('disable')
 async def enable_all_notes_cb(event, chat, strings):
-    deleted_count = await enable_all_cmds(chat['chat_id'])
+    chat_id = chat['chat_id']
+
+    deleted_count = await enable_all_cmds(chat_id)
+    await get_disabled_commands.reset_cache(chat_id)
 
     await event.message.edit_text(strings['enable_all_done'].format(chat_name=chat['chat_title'], num=deleted_count))

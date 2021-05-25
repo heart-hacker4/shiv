@@ -18,6 +18,7 @@ async def get_user_by_id(user_id: ChatId) -> Optional[SavedUser]:
 
 
 async def get_user_by_username(username: str) -> Optional[SavedUser]:
+    username = username.removeprefix('@')
     return await engine.find_one(SavedUser, SavedUser.username == username)
 
 

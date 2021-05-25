@@ -19,8 +19,9 @@ from functools import wraps
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from aiogram.utils.exceptions import Unauthorized
 
+from src.models.chat import SavedUser
 from src.modules.utils.user_details import is_user_admin
-from src.services.mongo import db
+from src.services.mongo import db, engine
 from src.services.redis import redis
 from src.utils.cached import Cached
 
@@ -56,11 +57,11 @@ async def get_connected_chat(message, admin=False, only_groups=False, from_id=No
 
     # Get chats where user was detected and check if user in connected chat
     # TODO: Really get the user and check on banned
-    user_chats = (await db.user_list.find_one({'user_id': user_id}))['chats']
+    user_chats = (await engine.find_one(SavedUser, SavedUser.user_id == user_id)).chats
     if chat_id not in user_chats:
         return {'status': None, 'err_msg': 'not_in_chat'}
 
-    chat_title = message.chat.title
+    chat_title = message.chat.title or "local chat"
 
     # Admin rights check if admin=True
     try:

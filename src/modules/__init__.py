@@ -1,18 +1,34 @@
 from importlib import import_module
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 from src.utils.logger import log
 
 # Import inbuilt filters
 import_module("src.filters")
 
-ALL_MODULES = [
+ALL_MODULES: Tuple[str, ...] = (
+    # Old modules - must by first
+    'reports',
+    'misc',
+    'restrictions',  # need more testing
+    'connection',  # kinda broken rn
+    'antiflood',
+    'locks',
+    'filters',
+    'pins',
+    'language',
+    'pm_menu',
+    'imports_exports',
+    'warns',
+
+    # New modules
     'notes',
     'op',
     'users_chats',
-    'disable'
-]
-MODULES = []
+    'disable',
+    'purges'
+)
+MODULES: List[Callable] = []
 
 
 def load_modules(skip_modules: List[str]) -> List[Callable]:
@@ -30,5 +46,7 @@ def load_modules(skip_modules: List[str]) -> List[Callable]:
 
         MODULES.append(module)
         log.debug(f'...Done loading module!')
+
+    log.debug('Done loading all modules!')
 
     return MODULES

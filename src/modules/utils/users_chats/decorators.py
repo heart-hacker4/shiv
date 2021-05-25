@@ -14,6 +14,7 @@ def get_user_and_text_dec(**dec_kwargs):
             if hasattr(message, 'message'):
                 message = message.message
 
+            print(await get_user_and_text(message, **dec_kwargs))
             user, text = await get_user_and_text(message, **dec_kwargs)
             if not user:
                 return await message.reply("I can't get the user!")

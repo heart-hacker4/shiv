@@ -28,14 +28,14 @@ from aiogram.types.input_file import InputFile
 from babel.dates import format_timedelta
 from odmantic.engine import ModelType
 from pydantic.error_wrappers import ValidationError
-from src.decorator import register
-from src.modules.utils.text import Code, KeyValue, STFDoc, Section, VList
+from stfu_tg import Code, Doc, KeyValue, Section, VList
 
-from src import BOT_ID, OPERATORS, SOPHIE_VERSION, bot
+from src import BOT_ID, SOPHIE_VERSION, bot
 from src.models.imports_exports import ExportInfo, ExportModel, GeneralData
+from src.modules import MODULES
 from src.modules.utils.message import get_arg
+from src.modules.utils.old_register import register
 from src.services.redis import redis
-from . import LOADED_MODULES
 from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 
@@ -53,18 +53,18 @@ class ImportFileWait(StatesGroup):
 async def export_chat_data(message, chat, strings):
     chat_id = chat['chat_id']
     key = 'export_lock:' + str(chat_id)
-    if redis.get(key) and message.from_user.id not in OPERATORS:
+    if redis.get(key):
         ttl = format_timedelta(timedelta(seconds=redis.ttl(key)), strings['language_info']['babel'])
         await message.reply(strings['exports_locked'] % ttl)
         return
 
     redis.set(key, 1)
-    redis.expire(key, 7200)
+    redis.expire(key, 120)
 
     msg = await message.reply(strings['started_exporting'])
     modules = {}
 
-    for module in [m for m in LOADED_MODULES if hasattr(m, '__export_data__')]:
+    for module in [m for m in MODULES if hasattr(m, '__export_data__')]:
         await asyncio.sleep(0.2)
 
         module_name = module.__name__.split('.')[-1]
@@ -121,7 +121,7 @@ async def import_state(message, state=None, **kwargs):
 async def import_fun(message, document, chat, strings):
     chat_id = chat['chat_id']
     key = 'import_lock:' + str(chat_id)
-    if redis.get(key) and message.from_user.id not in OPERATORS:
+    if redis.get(key):
         ttl = format_timedelta(timedelta(seconds=redis.ttl(key)), strings['language_info']['babel'])
         await message.reply(strings['imports_locked'] % ttl)
         return
@@ -157,7 +157,7 @@ async def import_fun(message, document, chat, strings):
     data_modules = data.get('modules', [])
 
     imported = []
-    for module in [m for m in LOADED_MODULES if hasattr(m, '__import_data__')]:
+    for module in [m for m in MODULES if hasattr(m, '__import_data__')]:
         module_name = module.__name__.replace('sophie_bot.modules.', '')
         if module_name not in data_modules:
             continue
@@ -174,7 +174,7 @@ async def import_fun(message, document, chat, strings):
                 error_location = ('modules', module_name) + error['loc']
                 error_list.append(KeyValue(' -> '.join(str(e) for e in error_location), Code(error['msg'])))
 
-            return await message.reply(str(STFDoc(Section(
+            return await message.reply(str(Doc(Section(
                 KeyValue(strings['module_name'], module_name),
                 Section(VList(*error_list), title=strings['error_msg']),
                 title=strings['import_error_header']

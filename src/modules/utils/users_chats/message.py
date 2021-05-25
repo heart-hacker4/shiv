@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from aiogram.types import Message, User
 
@@ -21,7 +21,7 @@ async def get_user_by_text(message: Message, arg: str) -> Optional[SavedUser]:
         if arg in (e_text := entity.get_text(message.text)):
             if entity.type == 'mention':
                 # This one entity is comes with mention by username, like @rSophieBot
-                return await _or_search(get_user_by_username, e_text.removeprefix('@'))
+                return await _or_search(get_user_by_username, e_text)
             elif entity.type == 'text_mention':
                 # This one is link mention, mostly used for users without an username
                 return await _or_search(get_user_by_id, entity.user.id)
@@ -60,18 +60,18 @@ async def get_user(message: Message, allow_self=False) -> Union[BaseUser, SavedU
     return user
 
 
-async def get_user_and_text(message: Message, **kwargs) -> (Optional[SavedUser], str):
+async def get_user_and_text(message: Message, **kwargs) -> Tuple[Optional[SavedUser], str]:
     """This function gets the user and text from args"""
     args = message.text.split(None, 2)
     user = await get_user(message, **kwargs)
 
     if len(args) > 1:
-        test_user: User = await get_user_by_text(message, args[1])
+        test_user: Optional[User] = await get_user_by_text(message, args[1])
         if test_user and test_user == user:
             # If message has a user argument that should be used
-            return user, args[2] if len(args) >= 2 else ''
+            return user, (args[2] if len(args) > 2 else '')
     else:
-        return user, (args[1] if len(args) >= 1 else '')
+        return user, (args[1] if len(args) > 1 else '')
 
 
 async def get_users(message) -> List[SavedUser]:

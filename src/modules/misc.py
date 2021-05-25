@@ -20,8 +20,8 @@ from contextlib import suppress
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from aiogram.types import Message
 from aiogram.utils.exceptions import BadRequest, MessageNotModified, MessageToDeleteNotFound
-from src.decorator import register
 
+from src.modules.utils.old_register import register
 from .utils.language import get_strings_dec
 # from .utils.notes import get_parsed_note_list, send_note, unparse_note_item
 from .utils.user_details import is_user_admin

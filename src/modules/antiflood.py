@@ -30,12 +30,12 @@ from aiogram.types.inline_keyboard import InlineKeyboardButton
 from aiogram.types.message import ContentType, Message
 from aiogram.utils.callback_data import CallbackData
 from babel.dates import format_timedelta
-from src.decorator import register
 
 from src import dp
 from src.modules.utils.connections import chat_connection
 from src.modules.utils.language import get_strings, get_strings_dec
 from src.modules.utils.message import InvalidTimeUnit, convert_time, get_args, need_args_dec
+from src.modules.utils.old_register import register
 from src.modules.utils.restrictions import ban_user, kick_user, mute_user
 from src.modules.utils.user_details import get_user_link, is_user_admin
 from src.services.mongo import db

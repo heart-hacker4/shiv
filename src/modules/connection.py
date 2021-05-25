@@ -25,9 +25,9 @@ from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMa
 from aiogram.utils.callback_data import CallbackData
 from aiogram.utils.deep_linking import get_start_link
 from aiogram.utils.exceptions import BotBlocked, CantInitiateConversation
-from src.decorator import register
 
 from src import bot
+from src.modules.utils.old_register import register
 from src.services.mongo import db
 from src.services.redis import redis
 from .utils.connections import chat_connection, get_connection_data, set_connected_chat

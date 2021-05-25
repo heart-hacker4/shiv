@@ -22,9 +22,9 @@ from contextlib import suppress
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from aiogram.utils.exceptions import MessageNotModified
-from src.decorator import register
-from src.modules.utils.text import Code, KeyValue
+from stfu_tg import Code, KeyValue
 
+from src.modules.utils.old_register import register
 from src.services.mongo import db
 from .utils.language import LANGUAGES, change_chat_lang, get_chat_lang_info, get_strings, get_strings_dec
 from .utils.message import get_arg

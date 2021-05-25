@@ -23,9 +23,9 @@ from contextlib import suppress
 
 from aiogram.utils.exceptions import MessageNotModified
 from babel.dates import format_datetime, format_timedelta
-from src.decorator import register
 
 from src import BOT_ID, bot
+from src.modules.utils.old_register import register
 from src.services.redis import redis
 from src.services.tg_telethon import tbot
 from .misc import customise_reason_finish, customise_reason_start
@@ -33,7 +33,8 @@ from .utils.connections import chat_connection
 from .utils.language import get_strings_dec
 from .utils.message import InvalidTimeUnit, convert_time, get_cmd
 from .utils.restrictions import ban_user, kick_user, mute_user, unban_user, unmute_user
-from .utils.user_details import get_user_and_text_dec, get_user_dec, get_user_link, is_user_admin
+from .utils.user_details import get_user_link, is_user_admin
+from .utils.users_chats.decorators import get_user_and_text_dec, get_user_dec
 
 
 @register(cmds=['kick', 'skick'], bot_can_restrict_members=True, user_can_restrict_members=True)
