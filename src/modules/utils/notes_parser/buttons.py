@@ -180,18 +180,17 @@ class ButtonFabric(List[List[DBButton]]):
         if options.type is DefinedButtonType.url:
             return button['name'], RealButtonTypes.url, button['argument']
 
-        elif options.type is DefinedButtonType.callback:
+        if options.type is DefinedButtonType.callback:
             return self.get_callback_button(button)
 
         # Here is buttons a little more complicated
-        elif options.type is DefinedButtonType.start:
+        if options.type is DefinedButtonType.start:
             return self.get_smart_button(button, argument=callback_data)
 
-        elif options.type is DefinedButtonType.smart:
+        if options.type is DefinedButtonType.smart:
             if is_pm:
                 return self.get_callback_button(button, argument=callback_data)
-            else:
-                return self.get_smart_button(button, argument=callback_data)
+            return self.get_smart_button(button, argument=callback_data)
 
     def unparse_to_text(self) -> str:
         """Unparses buttons to text. Uses the most modern buttons syntax."""

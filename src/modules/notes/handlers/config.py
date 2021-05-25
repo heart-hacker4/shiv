@@ -69,8 +69,7 @@ async def private_notes_cmd(message, chat, strings):
 async def clean_notes_status(message, chat, strings):
     if await get_clean_notes(chat['chat_id']):
         return await message.reply(strings['clean_notes_enabled'].format(chat_name=chat['chat_title']))
-    else:
-        return await message.reply(strings['clean_notes_disabled'].format(chat_name=chat['chat_title']))
+    return await message.reply(strings['clean_notes_disabled'].format(chat_name=chat['chat_title']))
 
 
 @dp.message_handler(cmds='cleannotes', has_args=True, is_admin=True)

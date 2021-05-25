@@ -41,9 +41,9 @@ def get_msg_parse_mode(text: str, default: Optional[ParseMode] = DEFAULT_PARSE_M
     arg = data.group(1).lower()
     if arg in ('pf', 'preformat', 'preformatted'):
         return ParseMode.preformatted
-    elif arg == 'html':
+    if arg == 'html':
         return ParseMode.html
-    elif arg in ('no', 'none', 'off'):
+    if arg in ('no', 'none', 'off'):
         return ParseMode.none
 
     raise ValueError

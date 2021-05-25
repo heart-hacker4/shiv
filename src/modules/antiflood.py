@@ -88,7 +88,7 @@ class AntifloodEnforcer(BaseMiddleware):
         ]
         if message.content_type in _pre:
             return False
-        elif message.chat.type in (ChatType.PRIVATE,):
+        if message.chat.type in (ChatType.PRIVATE,):
             return False
         return True
 
@@ -128,16 +128,16 @@ class AntifloodEnforcer(BaseMiddleware):
 
         if action == 'ban':
             return await ban_user(message.chat.id, message.from_user.id)
-        elif action == 'kick':
+        if action == 'kick':
             return await kick_user(message.chat.id, message.from_user.id)
-        elif action == 'mute':
+        if action == 'mute':
             return await mute_user(message.chat.id, message.from_user.id)
-        elif action.startswith('t'):
+        if action.startswith('t'):
             time = database.get('time', None)
             if not time: return False
             if action == "tmute":
                 return await mute_user(message.chat.id, message.from_user.id, until_date=convert_time(time))
-            elif action == 'tban':
+            if action == 'tban':
                 return await ban_user(message.chat.id, message.from_user.id, until_date=convert_time(time))
         else:
             return False

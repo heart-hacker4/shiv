@@ -116,7 +116,7 @@ async def save_caption_worker(message: Message, strings: dict, state=None):
         # A file caption message
         if len(files) == 0 and message.content_type is ContentType.TEXT:
             return await message.reply(strings['no_file_for_caption'])
-        elif message.content_type is ContentType.TEXT:
+        if message.content_type is ContentType.TEXT:
             # Update a previous saved file caption
 
             if len(new_caption := message.text) > CAPTION_LENGTH:

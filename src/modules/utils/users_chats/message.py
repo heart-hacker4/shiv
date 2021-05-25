@@ -22,7 +22,7 @@ async def get_user_by_text(message: Message, arg: str) -> Optional[SavedUser]:
             if entity.type == 'mention':
                 # This one entity is comes with mention by username, like @rSophieBot
                 return await _or_search(get_user_by_username, e_text)
-            elif entity.type == 'text_mention':
+            if entity.type == 'text_mention':
                 # This one is link mention, mostly used for users without an username
                 return await _or_search(get_user_by_id, entity.user.id)
 
