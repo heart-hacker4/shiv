@@ -215,7 +215,7 @@ async def send_note(
             "Meanwhile you can still save new notes."
         ),
 
-    elif note.old:
+    if note.old:
         return await send_old_note(note, send_id, message=message, user=user, is_pm=is_pm, raw=raw),
 
     return await send_new_note(

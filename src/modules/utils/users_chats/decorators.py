@@ -18,8 +18,7 @@ def get_user_and_text_dec(**dec_kwargs):
             user, text = await get_user_and_text(message, **dec_kwargs)
             if not user:
                 return await message.reply("I can't get the user!")
-            else:
-                return await func(*args, user, text, **kwargs)
+            return await func(*args, user, text, **kwargs)
 
         return wrapped_1
 
@@ -37,8 +36,7 @@ def get_user_dec(**dec_kwargs):
             if not (user := await get_user(message, **dec_kwargs)):
                 # TODO: translateable
                 return await message.reply("I can't get the user!")
-            else:
-                return await func(event, *args, user, **kwargs)
+            return await func(event, *args, user, **kwargs)
 
         return wrapped_1
 
@@ -56,8 +54,7 @@ def get_users_dec(**dec_kwargs):
             if not (users := await get_users(message, **dec_kwargs)):
                 # TODO: translateable
                 return await message.reply("I can't get the user(s)!")
-            else:
-                return await func(event, *args, users, **kwargs)
+            return await func(event, *args, users, **kwargs)
 
         return wrapped_1
 

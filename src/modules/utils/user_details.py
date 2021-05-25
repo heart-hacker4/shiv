@@ -127,37 +127,35 @@ async def get_user_link(user_id, custom_name=None, md=False):
 
     if md:
         return "[{name}](tg://user?id={id})".format(name=user_name, id=user_id)
-    else:
-        return "<a href=\"tg://user?id={id}\">{name}</a>".format(name=user_name, id=user_id)
+    return "<a href=\"tg://user?id={id}\">{name}</a>".format(name=user_name, id=user_id)
 
 
 async def get_admins_rights(chat_id, force_update=False):
     key = 'admin_cache:' + str(chat_id)
     if (alist := bredis.get(key)) and not force_update:
         return pickle.loads(alist)
-    else:
-        alist = {}
-        admins = await bot.get_chat_administrators(chat_id)
-        for admin in admins:
-            user_id = admin['user']['id']
-            alist[user_id] = {
-                'status': admin['status'],
-                'admin': True,
-                'title': admin['custom_title'],
-                'anonymous': admin['is_anonymous'],
-                'can_change_info': admin['can_change_info'],
-                'can_delete_messages': admin['can_delete_messages'],
-                'can_invite_users': admin['can_invite_users'],
-                'can_restrict_members': admin['can_restrict_members'],
-                'can_pin_messages': admin['can_pin_messages'],
-                'can_promote_members': admin['can_promote_members']
-            }
+    alist = {}
+    admins = await bot.get_chat_administrators(chat_id)
+    for admin in admins:
+        user_id = admin['user']['id']
+        alist[user_id] = {
+            'status': admin['status'],
+            'admin': True,
+            'title': admin['custom_title'],
+            'anonymous': admin['is_anonymous'],
+            'can_change_info': admin['can_change_info'],
+            'can_delete_messages': admin['can_delete_messages'],
+            'can_invite_users': admin['can_invite_users'],
+            'can_restrict_members': admin['can_restrict_members'],
+            'can_pin_messages': admin['can_pin_messages'],
+            'can_promote_members': admin['can_promote_members']
+        }
 
-            with suppress(KeyError):  # Optional permissions
-                alist[user_id]['can_post_messages'] = admin['can_post_messages']
+        with suppress(KeyError):  # Optional permissions
+            alist[user_id]['can_post_messages'] = admin['can_post_messages']
 
-        bredis.set(key, pickle.dumps(alist))
-        bredis.expire(key, 900)
+    bredis.set(key, pickle.dumps(alist))
+    bredis.expire(key, 900)
     return alist
 
 
@@ -180,8 +178,7 @@ async def is_user_admin(chat_id, user_id):
     else:
         if user_id in admins:
             return True
-        else:
-            return False
+        return False
 
 
 async def check_admin_rights(event: Union[Message, CallbackQuery], chat_id, user_id, rights):
@@ -228,10 +225,9 @@ async def check_group_admin(event, user_id, no_msg=False):
         chat_id = event.chat.id
     if await is_user_admin(chat_id, user_id) is True:
         return True
-    else:
-        if no_msg is False:
-            await event.reply("You should be a admin to do it!")
-        return False
+    if no_msg is False:
+        await event.reply("You should be a admin to do it!")
+    return False
 
 
 async def is_chat_creator(event: Union[Message, CallbackQuery], chat_id, user_id):

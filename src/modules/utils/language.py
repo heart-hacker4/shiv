@@ -48,19 +48,17 @@ async def get_chat_lang(chat_id):
     r = redis.get('lang_cache_{}'.format(chat_id))
     if r:
         return r
-    else:
-        db_lang = await db.lang.find_one({'chat_id': chat_id})
-        if db_lang:
-            # Rebuild lang cache
-            redis.set('lang_cache_{}'.format(chat_id), db_lang['lang'])
-            return db_lang['lang']
-        user_lang = await db.user_list.find_one({'user_id': chat_id})
-        if user_lang and user_lang['user_lang'] in LANGUAGES:
-            # Add telegram language in lang cache
-            redis.set('lang_cache_{}'.format(chat_id), user_lang['user_lang'])
-            return user_lang['user_lang']
-        else:
-            return 'en'
+    db_lang = await db.lang.find_one({'chat_id': chat_id})
+    if db_lang:
+        # Rebuild lang cache
+        redis.set('lang_cache_{}'.format(chat_id), db_lang['lang'])
+        return db_lang['lang']
+    user_lang = await db.user_list.find_one({'user_id': chat_id})
+    if user_lang and user_lang['user_lang'] in LANGUAGES:
+        # Add telegram language in lang cache
+        redis.set('lang_cache_{}'.format(chat_id), user_lang['user_lang'])
+        return user_lang['user_lang']
+    return 'en'
 
 
 async def change_chat_lang(chat_id, lang):

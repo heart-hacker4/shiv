@@ -50,10 +50,10 @@ async def disable_cmd(message: Message, chat: dict, strings: dict) -> Message:
         if suggestion := get_cmd_suggestion(command_name):
             sec += KeyValue(strings['did_you_mean'], f'{Code("/" + suggestion)}?')
         return await message.reply(sec)
-    elif command_name not in DISABLEABLE_COMMANDS:
+    if command_name not in DISABLEABLE_COMMANDS:
         return await message.reply(strings['command_cant_be_disabled'])
 
-    elif command_name in (disabled_list := await get_disabled_commands(chat_id)):
+    if command_name in (disabled_list := await get_disabled_commands(chat_id)):
         return await message.reply(strings['already_disabled'])
 
     await disable_command(chat_id, command_name)
@@ -103,10 +103,10 @@ async def enable_cmd(message: Message, chat: dict, strings: dict) -> Message:
         if suggestion := get_cmd_suggestion(command_name):
             sec += KeyValue(strings['did_you_mean'], f'{Code("/" + suggestion)}?')
         return await message.reply(sec)
-    elif command_name not in DISABLEABLE_COMMANDS:
+    if command_name not in DISABLEABLE_COMMANDS:
         return await message.reply(strings['command_cant_be_disabled'])
 
-    elif command_name not in (disabled_list := await get_disabled_commands(chat_id)):
+    if command_name not in (disabled_list := await get_disabled_commands(chat_id)):
         return await message.reply(strings['already_enabled'])
 
     await enable_command(chat_id, command_name)
