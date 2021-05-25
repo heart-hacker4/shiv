@@ -22,7 +22,7 @@ class OPFunctions:
     async def help(message: Message, arg_raw: str = ''):
         """Shows the help of OP commands"""
         doc = Doc()
-        for module_name in REGISTERED_OP_COMMANDS.keys():
+        for module_name in REGISTERED_OP_COMMANDS:
             data = []
             for cmd in REGISTERED_OP_COMMANDS[module_name].items():
                 help_string = cmd[1]['help']
