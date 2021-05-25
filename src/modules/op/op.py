@@ -120,7 +120,7 @@ class OPFunctions:
 
         if arg_raw in ENABLE_KEYWORDS:
             redis.set('mmode', 1, keepttl=7200)
-            return await message.reply(f"maintenance mode is now enabled for 2 hours")
+            return await message.reply("maintenance mode is now enabled for 2 hours")
         if arg_raw in DISABLE_KEYWORDS:
             redis.delete('mmode')
-            return await message.reply(f"maintenance mode is now disabled!")
+            return await message.reply("maintenance mode is now disabled!")

@@ -29,7 +29,7 @@ from .utils.user_details import is_user_admin
 
 @register(cmds='cancel', state='*', allow_kwargs=True)
 async def cancel_handle(message, state, **kwargs):
-    await message.reply(f'Cancelled.')
+    await message.reply('Cancelled.')
     await state.finish()
 
 
