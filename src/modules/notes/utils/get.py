@@ -83,7 +83,7 @@ async def get_notes_sections(
         notes_list: List[KeyValue] = []
 
         for note in [x for x in notes if x.group == group]:
-            if name_filter and not any([name_filter in x.lower() for x in note.names]):
+            if name_filter and not any(name_filter in x.lower() for x in note.names):
                 continue
 
             item_text = HList(*note.names, prefix='#')

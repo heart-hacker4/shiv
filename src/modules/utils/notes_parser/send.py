@@ -67,7 +67,7 @@ async def send_new_note(
     media_group: bool = note.files and len(note.files) > 1
     # Decide if we should to add a caption here or send a different message
     if not raw and len(text) <= CAPTION_LENGTH and not buttons and (
-            not note.files or not any([x.caption for x in note.files])):
+            not note.files or not any(x.caption for x in note.files)):
         last_caption = True
     else:
         last_caption = False
