@@ -5,15 +5,15 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential gcc
 RUN apt-get install -y --no-install-recommends libyaml-dev
 
-COPY requirements.txt .
+ADD requirements.txt .
 RUN pip install --user -r requirements.txt
 
 
 # Run image
 FROM python:3-alpine AS run-image
 
-RUN apk add libstdc++
-RUN apk add tzdata
+RUN apk add tzdata libstdc++
+RUN apk add nim nimble
 RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 COPY --from=compile-image /root/.local /root/.local
