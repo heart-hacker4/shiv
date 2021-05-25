@@ -56,8 +56,8 @@ async def __detailed_stats__() -> tuple:
 async def __export_data__(chat_id) -> ExportModel:
     return ExportModel(
         notes=await engine.find(SavedNote, SavedNote.chat_id == chat_id),
-        private_notes=True if await engine.find_one(PrivateNotes, PrivateNotes.chat_id == chat_id) else False,
-        clean_notes=True if await engine.find_one(CleanNotes, CleanNotes.chat_id == chat_id) else False
+        private_notes=bool(await engine.find_one(PrivateNotes, PrivateNotes.chat_id == chat_id)),
+        clean_notes=bool(await engine.find_one(CleanNotes, CleanNotes.chat_id == chat_id))
     )
 
 

@@ -61,7 +61,7 @@ async def select_lang_keyboard(message, strings, edit=False):
         lang_info = lang['language_info']
         markup.insert(InlineKeyboardButton(
             lang_info['flag'] + " " + lang_info['babel'].display_name,
-            callback_data=select_lang_cb.new(lang=lang_info['code'], back_btn=False if edit is False else True))
+            callback_data=select_lang_cb.new(lang=lang_info['code'], back_btn=not edit is False))
         )
 
     markup.add(InlineKeyboardButton(strings['crowdin_btn'], url='https://crowdin.com/project/sophiebot'))
