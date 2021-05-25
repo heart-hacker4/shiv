@@ -34,7 +34,7 @@ class SavedNote(Model):
 
     @validator('names', 'group', each_item=True)
     def special_charters(cls, v):
-        if any([x in RESTRICTED_SYMBOLS for x in v]):
+        if any(x in RESTRICTED_SYMBOLS for x in v):
             raise ValueError("Shouldn't contain special charters")
         return v
 
